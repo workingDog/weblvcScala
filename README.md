@@ -17,7 +17,7 @@
  
 ## References
  
-1) [WebLVC Draft Protocol Specification Version 0.4](https://www.sisostds.org)
+1) [WebLVC Protocol Specification](https://www.sisostds.org)
   
 2) [SISO](https://www.sisostds.org)
   
@@ -26,7 +26,7 @@
 
  See the build.sbt file. 
  
- [play-json]()
+ [play-json](https://github.com/playframework/play-json)
  
  [play-geojson library](https://github.com/jroper/play-geojson)
  
