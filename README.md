@@ -34,9 +34,3 @@
 ## Status
 
 A place holder, work in progress, not yet functional.
-
-## License
-
-"Attribution-NonCommercial-ShareAlike 4.0 International (CC BY-NC-SA 4.0)"
-
-[CC licence](http://creativecommons.org/licenses/by-nc-sa/4.0/)
