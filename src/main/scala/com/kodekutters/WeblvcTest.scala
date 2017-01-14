@@ -9,7 +9,7 @@ import scala.collection.mutable
 import scala.collection.immutable.Seq
 
 /**
-  * some tests
+  *
   */
 object WeblvcTest {
 
@@ -53,10 +53,7 @@ object WeblvcTest {
 
   def testConnect() = {
 
-    val minmax = Json.toJson(MinMaxString("TankA", "TankB")).toString()
-    println("\nminmax: " + minmax)
-
-    val filterList = scala.collection.mutable.ListMap[String, Any]("Marking" -> Array(minmax))
+    val filterList = scala.collection.mutable.ListMap[String, Any]("Marking" -> Array("TankA", "TankB"))
     val filters = new AttributesMap(filterList)
     val subObj = new SubscribeObject("WebLVC:PhysicalEntity", filters)
     val subObjJs = Json.prettyPrint(Json.toJson[WeblvcMsg](subObj))
@@ -273,8 +270,7 @@ object WeblvcTest {
     val test4Js = Json.prettyPrint(Json.toJson[WeblvcMsg](test4))
     println("test4: " + test4Js)
 
-    val minmax = Json.toJson(MinMaxString("TankA", "TankB")).toString()
-    val filterList = scala.collection.mutable.ListMap[String, Any]("Marking" -> Array(minmax))
+    val filterList = scala.collection.mutable.ListMap[String, Any]("Marking" -> Array("TankA", "TankB"))
     val filters = new AttributesMap(filterList)
     val test5 = new SubscribeObject("WebLVC:PhysicalEntity", Some(filters))
     val test5Js = Json.prettyPrint(Json.toJson[WeblvcMsg](test5))
@@ -315,9 +311,8 @@ object WeblvcTest {
   }
 
   def testFilters() = {
-    val tankA = "TankA"
     val dim = Array(1, 2, 3)
-    val filterList = mutable.ListMap[String, Any]("Marking" -> Array(tankA, "TankB"), "Dimension" -> dim)
+    val filterList = mutable.ListMap[String, Any]("Marking" -> Array("TankA", "TankB"), "Dimension" -> dim)
     val filters = new AttributesMap(filterList)
 
     val test3 = new AttributeUpdate("some-attribute-name", "objType", "zzzzzz", filters)
