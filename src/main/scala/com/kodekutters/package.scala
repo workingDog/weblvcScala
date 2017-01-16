@@ -671,7 +671,7 @@ package object WebLvc {
   /**
    * carry the values of the attributes of a EnvironmentalEntity
    */
-  case class EnvironmentalEntity(ObjectType: String = aggEntity, ObjectName: String,
+  case class EnvironmentalEntity(ObjectType: String = envEntity, ObjectName: String,
     Timestamp: Option[Either[String, Double]] = None,
     `Type`: Option[Array[Int]] = None,
     ProcessIdentifier: Option[Array[Int]] = None,
