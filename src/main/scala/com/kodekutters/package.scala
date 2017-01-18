@@ -743,7 +743,7 @@ package object WebLvc {
   /**
    * carry the values of the attributes of a RadioTransmitter
    */
-  case class RadioTransmitter(ObjectType: String, ObjectName: String,
+  case class RadioTransmitter(ObjectType: String = radioTrans, ObjectName: String,
     Timestamp: Option[Either[String, Double]] = None,
     EntityIdentifier: Option[Array[Int]] = None,
     HostObjectName: Option[String] = None,
