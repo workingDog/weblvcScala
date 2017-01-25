@@ -10,7 +10,7 @@ scalaVersion := "2.11.8"
 crossScalaVersions := Seq("2.11.8", "2.12.1")
 
 libraryDependencies ++= Seq(
-  "com.typesafe.play" %% "play-json" % "2.5.11",
+  "com.typesafe.play" %% "play-json" % "2.5.10",
   "com.typesafe.play.extras" %% "play-geojson" % "1.4.0")
 
 javacOptions ++= Seq("-source", "1.8", "-target", "1.8")

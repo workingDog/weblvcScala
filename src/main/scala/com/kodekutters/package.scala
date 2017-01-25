@@ -6,14 +6,12 @@ import play.api.libs.json.Writes._
 import play.api.libs.json._
 import play.extras.geojson._
 
-import scala.collection.mutable
-
 
 /**
   * WebLVC standard object model protocol
   *
   * ref:  "WebLVC Draft Protocol Specification Version 0.4"
-  * see SISO discussions: https//discussions.sisostds.org/index.htm?A2=SAC-PDG-WebLVC;7bd8624.1503
+  * see SISO: https://www.sisostds.org/StandardsActivities/DevelopmentGroups/WebLVCPDG.aspx
   *
   * Author: R. Wathelet
   * version: 0.4
@@ -228,9 +226,9 @@ package object WebLvc {
     def readAttributes(js: JsValue, omitList: List[String]): Option[AttributesMap] = {
       js match {
         case json: JsObject =>
-          // read all fields of js, but not the fields in the omitList
+          // get all fields of js, but not the fields in the omitList
           val fList = json.fields.filterNot(p => omitList.contains(p._1))
-          val theListMap = mutable.ListMap.empty ++= fList.collect {
+          val theListMap = fList.collect {
             case (key, JsString(value)) => key -> value
             case (key, JsNumber(value)) => key -> value // BigDecimal <----- todo
             case (key, JsBoolean(value)) => key -> value
@@ -246,7 +244,7 @@ package object WebLvc {
       def reads(json: JsValue): JsResult[AttributesMap] = {
         json match {
           case js: JsObject =>
-            val theListMap = mutable.ListMap.empty ++= js.fields.collect {
+            val theListMap = js.fields.collect {
               case (key, JsString(value)) => key -> value
               case (key, JsNumber(value)) => key -> value // BigDecimal ?<----- todo
               case (key, JsBoolean(value)) => key -> value
