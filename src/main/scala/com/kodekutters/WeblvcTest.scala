@@ -9,36 +9,13 @@ import scala.collection.mutable
 import scala.collection.immutable.Seq
 
 /**
-  *
+  * ad-hock
   */
 object WeblvcTest {
 
   import com.kodekutters.WebLvc.WebLvcSupport._
 
-  def testx() = {
-
-    val connectionList = scala.collection.parallel.mutable.ParHashMap.empty[String, String]
-
-    for (i <- 1 to 5) connectionList += i.toString -> ("xx_" + i.toString)
-
-    connectionList.foreach(println(_))
-
-    val clientId = "3a"
-
-    connectionList.get(clientId).map(wsClient => {
-      println("-----> get client: " + wsClient)
-    })
-
-    connectionList.find(_._1 == clientId) match {
-      case Some((id, client)) => println("-----> found id: " + id + " client: " + client)
-
-      case None => println("-------------> not found \n")
-    }
-  }
-
   def main(args: Array[String]): Unit = {
-
-    //  testx()
 
     testConnect()
     testConfigure()
@@ -53,16 +30,44 @@ object WeblvcTest {
 
   def testConnect() = {
 
-    val filterList = scala.collection.mutable.ListMap[String, Any]("Marking" -> Array("TankA", "TankB"))
+    val js = """{"MessageKind":"Connect","ClientName":"testconnect","WebLVCVersion":1.2,"Messages":[{"MessageKind":"SubscribeObject","ObjectType":"WebLVC:PhysicalEntity","Marking":"TankA"}]}""".stripMargin
+
+    import com.kodekutters.WebLvc.WeblvcMsg._
+
+    val filterList = Map[String, String]("Marking" -> "TankA")
     val filters = new AttributesMap(filterList)
-    val subObj = new SubscribeObject("WebLVC:PhysicalEntity", filters)
-    val subObjJs = Json.prettyPrint(Json.toJson[WeblvcMsg](subObj))
-    println("\nsubObj: " + subObj)
+    println("\nfilters: " + filters)
+
+    val f = Json.toJson[AttributesMap](filters)
+    println("\nf: " + f)
+    println("\nf back: " + Json.fromJson[AttributesMap](f).asOpt)
+
+    val subObj = new SubscribeObject("WebLVC:PhysicalEntity", None)
+    val subObjJs = Json.toJson[WeblvcMsg](subObj)
+    println("\n\nsubObj: " + subObj)
+    val backObj = Json.fromJson[WeblvcMsg](subObjJs).asOpt
+    println("\nback subObj: " + backObj + "\n")
 
     val test1 = new Connect("testconnect", 1.2, Option(Array(subObj)))
-    val test1Js = Json.prettyPrint(Json.toJson[WeblvcMsg](test1))
-    println("\ntest1: " + test1Js)
+    println("\ntest1: " + test1)
+    val test1Js = Json.toJson[WeblvcMsg](test1)
+    println("\ntest1Js: " + test1Js)
 
+    val nameResult: JsResult[WeblvcMsg] = test1Js.validate[WeblvcMsg]
+    nameResult match {
+      case s: JsSuccess[WeblvcMsg] => println("\nvalidate: " + s.get)
+      case e: JsError => println("\nErrors: " + JsError.toJson(e).toString())
+    }
+
+    val p = Json.parse(test1Js.toString())
+    println("\ntest1 parse: " + p)
+    println("\nconctp: " + Json.fromJson[WeblvcMsg](p).asOpt + "\n")
+
+    val conct = Json.fromJson[WeblvcMsg](test1Js).asOpt
+    println("\nconct: " + conct + "\n")
+
+    val conct2 = Json.fromJson[WeblvcMsg](Json.parse(js)).asOpt
+    println("\nconct2: " + conct2 + "\n")
   }
 
   def WeaponFire(): Unit = {
@@ -83,42 +88,10 @@ object WeblvcTest {
     println("obj " + obj + "\n")
     obj match {
       case None => println("no WeaponFire")
-      case Some(radio) => println("WeaponFire: " + Json.prettyPrint(Json.toJson[WeblvcMsg](radio)))
-    }
-    println()
-  }
-
-  def testEnv() = {
-
-    val js =
-      """{
-          "MessageKind" : "AttributeUpdate",
-          "ObjectType" : "WebLVC:EnvironmentalEntity",
-          "ObjectName" : "obj-name",
-          "Timestamp" : "time-thing",
-          "ProcessIdentifier" : [1, 2, 3],
-          "Type" : [1, 4, 0, 0, 0, 0, 0],
-          "ModelType" : 1,
-          "EnvironmentProcessActive" : true,
-          "SequenceNumber" : 5,
-                  "GeometryRecords" : [
-                  		{
-                  		"Type" : "LineString",
-                  		"coordinates" : [
-                  			[4437182.0232, -395338.0731, 873923.4663],
-                        [4437124.1523, -395341.2841, 873922.5517]
-                  		]
-                    }
-                  	]
-          }
-        """.stripMargin
-
-    val prs = Json.parse(js)
-
-    val env = Json.fromJson[WeblvcMsg](prs).asOpt
-    env match {
-      case None => println("no env")
-      case Some(phys) => println("env: " + Json.prettyPrint(Json.toJson[WeblvcMsg](phys)))
+      case Some(wef) =>
+        val jsp = Json.prettyPrint(Json.toJson[WeblvcMsg](wef))
+        println("WeaponFire: " + Json.prettyPrint(Json.toJson[WeblvcMsg](wef)))
+        println("\nback WeaponFire: " + Json.fromJson[WeblvcMsg](Json.parse(jsp)).asOpt)
     }
     println()
   }
@@ -142,7 +115,8 @@ object WeblvcTest {
           "Marking" : "F-16",
           "EngineSmokeOn" : true,
           "IsConcealed" : false,
-          "DamageState" : 1
+          "DamageState" : 1,
+          "some_attributesx" : "strawberriesx"
           }""".stripMargin
 
     val prs = Json.parse(jsPhys)
@@ -171,11 +145,15 @@ object WeblvcTest {
              "Marking" : "Platoon 1",
              "Dimensions" : [10.0, 20.0, 1.0],
              "Subordinates" : ["Tank1", "Tank2", "Tank3"],
-             "Formation" : 3
+             "Formation" : 3,
+             "some_attributeszzz" : "strawberrieszzz"
           }
         """.stripMargin
 
     val obj = Json.fromJson[WeblvcMsg](Json.parse(js)).asOpt
+
+    val filterList = Map[String, Any]("Marking" -> Array("TankA", "TankB"))
+    val filters = new AttributesMap(filterList)
 
     obj match {
       case None => println("no AggregateEntity")
@@ -193,6 +171,7 @@ object WeblvcTest {
       """{
                      "MessageKind" : "AttributeUpdate",
                      "ObjectType" : "WebLVC:RadioTransmitter",
+                     "some_attributeszzz" : "strawberrieszzz",
                      "ObjectName" : "radio-banana",
                      "EntityIdentifier" : [1, 1, 3001],
                      "RadioIndex" : 1,
@@ -230,10 +209,11 @@ object WeblvcTest {
         """.stripMargin
 
     val obj = Json.fromJson[WeblvcMsg](Json.parse(js)).asOpt
+    println("\nobj fromJson: " + obj)
 
     obj match {
       case None => println("no radio")
-      case Some(radio) => println("radio: " + Json.prettyPrint(Json.toJson[WeblvcMsg](radio)))
+      case Some(radio) => println("\nradio toJson: " + Json.prettyPrint(Json.toJson[WeblvcMsg](radio)))
     }
     println()
   }
@@ -270,7 +250,7 @@ object WeblvcTest {
     val test4Js = Json.prettyPrint(Json.toJson[WeblvcMsg](test4))
     println("test4: " + test4Js)
 
-    val filterList = scala.collection.mutable.ListMap[String, Any]("Marking" -> Array("TankA", "TankB"))
+    val filterList = Map[String, Any]("Marking" -> Array("TankA", "TankB"))
     val filters = new AttributesMap(filterList)
     val test5 = new SubscribeObject("WebLVC:PhysicalEntity", Some(filters))
     val test5Js = Json.prettyPrint(Json.toJson[WeblvcMsg](test5))
@@ -312,7 +292,7 @@ object WeblvcTest {
 
   def testFilters() = {
     val dim = Array(1, 2, 3)
-    val filterList = mutable.ListMap[String, Any]("Marking" -> Array("TankA", "TankB"), "Dimension" -> dim)
+    val filterList = Map[String, Any]("Marking" -> Array("TankA", "TankB"), "Dimension" -> dim)
     val filters = new AttributesMap(filterList)
 
     val test3 = new AttributeUpdate("some-attribute-name", "objType", "zzzzzz", filters)
@@ -324,6 +304,52 @@ object WeblvcTest {
     val test5Js = Json.prettyPrint(Json.toJson[WeblvcMsg](test5))
     println("test5: " + test5Js)
 
+  }
+
+
+  def testEnv() = {
+
+    val js =
+      """{
+          "MessageKind" : "AttributeUpdate",
+          "ObjectType" : "WebLVC:EnvironmentalEntity",
+          "ObjectName" : "obj-name",
+          "Timestamp" : "time-thing",
+          "ProcessIdentifier" : [1, 2, 3],
+          "Type" : [1, 4, 0, 0, 0, 0, 0],
+          "ModelType" : 1,
+          "EnvironmentProcessActive" : true,
+          "some_attributesqqq" : "strawberriesqqq",
+          "SequenceNumber" : 5,
+                  "GeometryRecords" : [
+                  		{
+                  		"Type" : "LineString",
+                  		"coordinates" : [
+                  			[4437182.0232, -395338.0731, 873923.4663],
+                        [4437124.1523, -395341.2841, 873922.5517]
+                  		]
+                    }
+                  	]
+          }
+        """.stripMargin
+
+    val prs = Json.parse(js)
+
+    val env = Json.fromJson[WeblvcMsg](prs).asOpt
+    println("\nenv fromJson: " + env + "\n")
+
+    env match {
+      case None => println("\nno env")
+      case Some(phys) =>
+        val q = Json.toJson[WeblvcMsg](phys)
+        println("\nenv tojson: " + Json.prettyPrint(q))
+
+        val nameResult: JsResult[WeblvcMsg] = q.validate[WeblvcMsg]
+        nameResult match {
+          case s: JsSuccess[WeblvcMsg] => println("\nvalidate: " + s.get)
+          case e: JsError => println("\nErrors: " + JsError.toJson(e).toString())
+        }
+    }
   }
 
 }
