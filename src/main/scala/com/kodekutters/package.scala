@@ -284,10 +284,24 @@ package object WebLvc {
   }
 
   /**
-    * the weblvc message
+    * designate a generic weblvc message
     */
   sealed trait WeblvcMsg {
     val MessageKind: String
+  }
+
+  /**
+    * designate an attribute update message
+    */
+  sealed trait AttributeUpdateMsg {
+    val ObjectType: String
+  }
+
+  /**
+    * designate an Interaction message
+    */
+  sealed trait InteractionMsg {
+    val InteractionType: String
   }
 
   //------------------------------------------------------------------------------------
@@ -470,7 +484,7 @@ package object WebLvc {
     */
   case class AttributeUpdate(ObjectName: String, ObjectType: String,
                              Timestamp: Option[Either[String, Double]] = None,
-                             attributes: Option[AttributesMap] = None) extends WeblvcMsg {
+                             attributes: Option[AttributesMap] = None) extends WeblvcMsg with AttributeUpdateMsg {
 
     def this(ObjectName: String, ObjectType: String, Timestamp: String) = this(ObjectName, ObjectType, Option(Left(Timestamp)))
 
@@ -522,7 +536,7 @@ package object WebLvc {
                             Coordinates: Option[Coordinates] = None,
                             ForceIdentifier: Option[Int] = None,
                             Marking: Option[String] = None,
-                            attributes: Option[AttributesMap] = None) extends WeblvcMsg {
+                            attributes: Option[AttributesMap] = None) extends WeblvcMsg with AttributeUpdateMsg {
 
     val MessageKind = PhysicalEntity.MessageKind
     val ObjectType = PhysicalEntity.ObjectType
@@ -610,7 +624,7 @@ package object WebLvc {
                              SilentEntities: Option[Array[SilentType]] = None,
                              SilentAggregates: Option[Array[SilentType]] = None,
                              SilentEntitiesDamageState: Option[Array[SilentType]] = None,
-                             attributes: Option[AttributesMap] = None) extends WeblvcMsg {
+                             attributes: Option[AttributesMap] = None) extends WeblvcMsg with AttributeUpdateMsg {
 
     val MessageKind = AggregateEntity.MessageKind
     val ObjectType = AggregateEntity.ObjectType
@@ -709,7 +723,7 @@ package object WebLvc {
                                  EnvironmentProcessActive: Option[Boolean] = None,
                                  SequenceNumber: Option[Int] = None,
                                  GeometryRecords: Option[Array[GeometryRecord]] = None,
-                                 attributes: Option[AttributesMap] = None) extends WeblvcMsg {
+                                 attributes: Option[AttributesMap] = None) extends WeblvcMsg with AttributeUpdateMsg {
 
     val MessageKind = EnvironmentalEntity.MessageKind
     val ObjectType = EnvironmentalEntity.ObjectType
@@ -813,7 +827,7 @@ package object WebLvc {
                               FrequencyHopInUse: Option[Boolean] = None,
                               PseudoNoiseInUse: Option[Boolean] = None,
                               TimeHopInUse: Option[Boolean] = None,
-                              attributes: Option[AttributesMap] = None) extends WeblvcMsg {
+                              attributes: Option[AttributesMap] = None) extends WeblvcMsg with AttributeUpdateMsg {
 
     val MessageKind = RadioTransmitter.MessageKind
     val ObjectType = RadioTransmitter.ObjectType
@@ -951,7 +965,7 @@ package object WebLvc {
 
   case class Interaction(InteractionType: String,
                          Timestamp: Option[Either[String, Double]] = None,
-                         attributes: Option[AttributesMap] = None) extends WeblvcMsg {
+                         attributes: Option[AttributesMap] = None) extends WeblvcMsg with InteractionMsg {
 
     val MessageKind = Interaction.MessageKind
   }
@@ -1008,7 +1022,7 @@ package object WebLvc {
                         Quantity: Option[Int] = None,
                         Rate: Option[Int] = None,
                         Range: Option[Long] = None,
-                        Coordinates: Option[Coordinates] = None) extends WeblvcMsg {
+                        Coordinates: Option[Coordinates] = None) extends WeblvcMsg with InteractionMsg {
 
     val MessageKind = WeaponFire.MessageKind
     val InteractionType = WeaponFire.InteractionType
@@ -1053,7 +1067,7 @@ package object WebLvc {
                                 Quantity: Option[Int] = None,
                                 Rate: Option[Int] = None,
                                 EntityLocation: Option[Array[Double]] = None,
-                                Coordinates: Option[Coordinates] = None) extends WeblvcMsg {
+                                Coordinates: Option[Coordinates] = None) extends WeblvcMsg with InteractionMsg {
 
     val MessageKind = MunitionDetonation.MessageKind
     val InteractionType = MunitionDetonation.InteractionType
@@ -1091,7 +1105,7 @@ package object WebLvc {
                          RequestIdentifier: Int,
                          RealWorldTime: Double,
                          SimulationTime: Double,
-                         OriginatingEntity: Option[Array[Int]] = None) extends WeblvcMsg {
+                         OriginatingEntity: Option[Array[Int]] = None) extends WeblvcMsg with InteractionMsg {
 
     val MessageKind = StartResume.MessageKind
     val InteractionType = StartResume.InteractionType
@@ -1130,7 +1144,7 @@ package object WebLvc {
                         Reason: Option[Int] = None,
                         ReflectValues: Option[Boolean] = None,
                         RunInternalSimulationClock: Option[Boolean] = None,
-                        UpdateAttributes: Option[Boolean] = None) extends WeblvcMsg {
+                        UpdateAttributes: Option[Boolean] = None) extends WeblvcMsg with InteractionMsg {
 
     val MessageKind = StopFreeze.MessageKind
     val InteractionType = StopFreeze.InteractionType
@@ -1172,7 +1186,7 @@ package object WebLvc {
                          SampleCount: Option[Int] = None,
                          SampleData: Option[String] = None,
                          DatabaseIndex: Option[Int] = None,
-                         UserProtocolID: Option[Int] = None) extends WeblvcMsg {
+                         UserProtocolID: Option[Int] = None) extends WeblvcMsg with InteractionMsg {
 
     val MessageKind = RadioSignal.MessageKind
     val InteractionType = RadioSignal.InteractionType
