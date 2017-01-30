@@ -258,7 +258,7 @@ package object WebLvc {
     }
 
     val theWrites = new Writes[AttributesMap] {
-      def writes(keyval: AttributesMap) = {
+      def writes(keyval: AttributesMap): JsObject = {
         val list = for ((k, v) <- keyval.nodes) yield {
           v match {
             case x: String => k -> JsString(x)
@@ -486,9 +486,9 @@ package object WebLvc {
                              Timestamp: Option[Either[String, Double]] = None,
                              attributes: Option[AttributesMap] = None) extends WeblvcMsg with AttributeUpdateMsg {
 
-    def this(ObjectName: String, ObjectType: String, Timestamp: String) = this(ObjectName, ObjectType, Option(Left(Timestamp)))
+    def this(ObjectName: String, ObjectType: String, Timestamp: String, attributes: AttributesMap) = this(ObjectName, ObjectType, Option(Left(Timestamp)), Option(attributes))
 
-    def this(ObjectName: String, ObjectType: String, Timestamp: Double) = this(ObjectName, ObjectType, Option(Right(Timestamp)))
+    def this(ObjectName: String, ObjectType: String, Timestamp: Double, attributes: AttributesMap) = this(ObjectName, ObjectType, Option(Right(Timestamp)), Option(attributes))
 
     val MessageKind = AttributeUpdate.MessageKind
   }
@@ -498,7 +498,7 @@ package object WebLvc {
 
     // "MessageKind" plus the list of field names but not "attributes"
     private val omitList = List("MessageKind") ++
-      (for (f <- AttributeUpdate.getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
+      (for (f <- AttributeUpdate("", "").getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
 
     val theReads = new Reads[AttributeUpdate] {
       def reads(js: JsValue): JsResult[AttributeUpdate] = {
@@ -548,7 +548,7 @@ package object WebLvc {
 
     // "MessageKind" and "ObjectType" plus the list of field names but not "attributes"
     private val omitList = List("MessageKind", "ObjectType") ++
-      (for (f <- RadioTransmitter.getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
+      (for (f <- PhysicalEntity("").getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
 
     val theReads = new Reads[PhysicalEntity] {
       def reads(js: JsValue): JsResult[PhysicalEntity] = {
@@ -568,22 +568,21 @@ package object WebLvc {
       }
     }
 
-    val pWrites: Writes[PhysicalEntity] =
-      ((JsPath \ "ObjectName").write[String] and
-        (JsPath \ "Timestamp").writeNullable[Either[String, Double]] and
-        (JsPath \ "EntityType").writeNullable[Array[Int]] and
-        (JsPath \ "EntityIdentifier").writeNullable[Array[Int]] and
-        (JsPath \ "Coordinates").writeNullable[Coordinates] and
-        (JsPath \ "ForceIdentifier").writeNullable[Int] and
-        (JsPath \ "Marking").writeNullable[String] and
-        JsPath.writeNullable[AttributesMap]) (unlift(PhysicalEntity.unapply))
-
     val theWrites = new Writes[PhysicalEntity] {
       def writes(p: PhysicalEntity) = {
-        val theList = Json.obj("MessageKind" -> JsString(MessageKind), "ObjectType" -> JsString(ObjectType))
+        val envx = Json.obj(
+          "MessageKind" -> JsString(p.MessageKind),
+          "ObjectType" -> JsString(p.ObjectType),
+          "ObjectName" -> JsString(p.ObjectName),
+          "Timestamp" -> Json.toJson(p.Timestamp),
+          "EntityType" -> Json.toJson(p.EntityType),
+          "EntityIdentifier" -> Json.toJson(p.EntityIdentifier),
+          "Coordinates" -> Json.toJson(p.Coordinates),
+          "ForceIdentifier" -> Json.toJson(p.ForceIdentifier),
+          "Marking" -> Json.toJson(p.Marking))
         p.attributes match {
-          case Some(att) => theList ++ Json.toJson(att).asInstanceOf[JsObject] ++ pWrites.writes(p).asInstanceOf[JsObject]
-          case None => theList
+          case Some(att) => envx ++ Json.toJson[AttributesMap](att).asInstanceOf[JsObject]
+          case None => envx
         }
       }
     }
@@ -636,7 +635,7 @@ package object WebLvc {
 
     // "MessageKind" and "ObjectType" plus the list of field names but not "attributes"
     private val omitList = List("MessageKind", "ObjectType") ++
-      (for (f <- RadioTransmitter.getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
+      (for (f <- AggregateEntity("").getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
 
     val theReads = new Reads[AggregateEntity] {
       def reads(js: JsValue): JsResult[AggregateEntity] = {
@@ -666,31 +665,33 @@ package object WebLvc {
 
     val theWrites = new Writes[AggregateEntity] {
       def writes(p: AggregateEntity) = {
-        val theList = Json.obj("MessageKind" -> JsString(MessageKind), "ObjectType" -> JsString(ObjectType))
+        val envx = Json.obj(
+          "MessageKind" -> JsString(p.MessageKind),
+          "ObjectType" -> JsString(p.ObjectType),
+          "ObjectName" -> JsString(p.ObjectName),
+          "Timestamp" -> Json.toJson(p.Timestamp),
+          "EntityType" -> Json.toJson(p.EntityType),
+          "EntityIdentifier" -> Json.toJson(p.EntityIdentifier),
+          "Coordinates" -> Json.toJson(p.Coordinates),
+          "ForceIdentifier" -> Json.toJson(p.ForceIdentifier),
+          "AggregateState" -> Json.toJson(p.AggregateState),
+          "Formation" -> Json.toJson(p.Formation),
+          "Dimensions" -> Json.toJson(p.Dimensions),
+          "Subordinates" -> Json.toJson(p.Subordinates),
+          "AggregateSubordinates" -> Json.toJson(p.AggregateSubordinates),
+          "SilentEntities" -> Json.toJson(p.SilentEntities),
+          "SilentAggregates" -> Json.toJson(p.SilentAggregates),
+          "SilentEntitiesDamageState" -> Json.toJson(p.SilentEntitiesDamageState),
+          "ForceIdentifier" -> Json.toJson(p.ForceIdentifier),
+          "ForceIdentifier" -> Json.toJson(p.ForceIdentifier),
+          "ForceIdentifier" -> Json.toJson(p.ForceIdentifier),
+          "Marking" -> Json.toJson(p.Marking))
         p.attributes match {
-          case Some(att) => theList ++ Json.toJson(att).asInstanceOf[JsObject] ++ pWrites.writes(p).asInstanceOf[JsObject]
-          case None => theList
+          case Some(att) => envx ++ Json.toJson[AttributesMap](att).asInstanceOf[JsObject]
+          case None => envx
         }
       }
     }
-
-    val pWrites: Writes[AggregateEntity] =
-      ((JsPath \ "ObjectName").write[String] and
-        (JsPath \ "Timestamp").writeNullable[Either[String, Double]] and
-        (JsPath \ "EntityType").writeNullable[Array[Int]] and
-        (JsPath \ "EntityIdentifier").writeNullable[Array[Int]] and
-        (JsPath \ "Coordinates").writeNullable[Coordinates] and
-        (JsPath \ "ForceIdentifier").writeNullable[Int] and
-        (JsPath \ "Marking").writeNullable[String] and
-        (JsPath \ "AggregateState").writeNullable[Int] and
-        (JsPath \ "Formation").writeNullable[Int] and
-        (JsPath \ "Dimensions").writeNullable[Array[Double]] and
-        (JsPath \ "Subordinates").writeNullable[Array[String]] and
-        (JsPath \ "AggregateSubordinates").writeNullable[Array[String]] and
-        (JsPath \ "SilentEntities").writeNullable[Array[SilentType]] and
-        (JsPath \ "SilentAggregates").writeNullable[Array[SilentType]] and
-        (JsPath \ "SilentEntitiesDamageState").writeNullable[Array[SilentType]] and
-        JsPath.writeNullable[AttributesMap]) (unlift(AggregateEntity.unapply))
 
     implicit val fmt: Format[AggregateEntity] = Format(theReads, theWrites)
   }
@@ -735,7 +736,7 @@ package object WebLvc {
 
     // "MessageKind" and "ObjectType" plus the list of field names but not "attributes"
     private val omitList = List("MessageKind", "ObjectType") ++
-      (for (f <- RadioTransmitter.getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
+      (for (f <- EnvironmentalEntity("").getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
 
     val theReads = new Reads[EnvironmentalEntity] {
       def reads(js: JsValue): JsResult[EnvironmentalEntity] = {
@@ -758,24 +759,23 @@ package object WebLvc {
 
     val theWrites = new Writes[EnvironmentalEntity] {
       def writes(p: EnvironmentalEntity) = {
-        val theList = Json.obj("MessageKind" -> JsString(MessageKind), "ObjectType" -> JsString(ObjectType))
+        val envx = Json.obj(
+          "MessageKind" -> JsString(p.MessageKind),
+          "ObjectType" -> JsString(p.ObjectType),
+          "ObjectName" -> JsString(p.ObjectName),
+          "Timestamp" -> Json.toJson(p.Timestamp),
+          "Type" -> Json.toJson(p.`Type`),
+          "ProcessIdentifier" -> Json.toJson(p.ProcessIdentifier),
+          "ModelType" -> Json.toJson(p.ModelType),
+          "EnvironmentProcessActive" -> Json.toJson(p.EnvironmentProcessActive),
+          "SequenceNumber" -> Json.toJson(p.SequenceNumber),
+          "GeometryRecords" -> Json.toJson(p.GeometryRecords))
         p.attributes match {
-          case Some(att) => theList ++ Json.toJson(att).asInstanceOf[JsObject] ++ pWrites.writes(p).asInstanceOf[JsObject]
-          case None => theList
+          case Some(att) => envx ++ Json.toJson[AttributesMap](att).asInstanceOf[JsObject]
+          case None => envx
         }
       }
     }
-
-    val pWrites: Writes[EnvironmentalEntity] =
-      ((JsPath \ "ObjectName").write[String] and
-        (JsPath \ "Timestamp").writeNullable[Either[String, Double]] and
-        (JsPath \ "Type").writeNullable[Array[Int]] and
-        (JsPath \ "ProcessIdentifier").writeNullable[Array[Int]] and
-        (JsPath \ "ModelType").writeNullable[Int] and
-        (JsPath \ "EnvironmentProcessActive").writeNullable[Boolean] and
-        (JsPath \ "SequenceNumber").writeNullable[Int] and
-        (JsPath \ "GeometryRecords").writeNullable[Array[GeometryRecord]] and
-        JsPath.writeNullable[AttributesMap]) (unlift(EnvironmentalEntity.unapply))
 
     implicit val fmt: Format[EnvironmentalEntity] = Format(theReads, theWrites)
   }
@@ -839,7 +839,7 @@ package object WebLvc {
 
     // "MessageKind" and "ObjectType" plus the list of field names but not "attributes"
     private val omitList = List("MessageKind", "ObjectType") ++
-      (for (f <- RadioTransmitter.getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
+      (for (f <- RadioTransmitter("").getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
 
     val theReads = new Reads[RadioTransmitter] {
       def reads(js: JsValue): JsResult[RadioTransmitter] = {
@@ -875,36 +875,35 @@ package object WebLvc {
     }
 
     val theWrites = new Writes[RadioTransmitter] {
-      def writes(radio: RadioTransmitter) = {
-        val theList = List[Option[(String, JsValue)]](
-          Option("MessageKind" -> JsString(MessageKind)),
-          Option("ObjectType" -> JsString(ObjectType)),
-          Option("ObjectName" -> JsString(radio.ObjectName)),
-          radio.Timestamp.map("Timestamp" -> Json.toJson(_)),
-          radio.EntityIdentifier.map("EntityIdentifier" -> Json.toJson(_)),
-          radio.HostObjectName.map("HostObjectName" -> JsString(_)),
-          radio.RadioIndex.map("RadioIndex" -> JsNumber(_)),
-          radio.RadioEntityType.map("RadioEntityType" -> Json.toJson(_)),
-          radio.TransmitState.map("TransmitState" -> JsNumber(_)),
-          radio.InputSource.map("InputSource" -> Json.toJson(_)),
-          radio.WorldAntennaLocation.map("WorldAntennaLocation" -> Json.toJson(_)),
-          radio.RelativeAntennaLocation.map("RelativeAntennaLocation" -> Json.toJson(_)),
-          radio.AntennaPatternType.map("AntennaPatternType" -> JsNumber(_)),
-          radio.Frequency.map("Frequency" -> JsNumber(_)),
-          radio.TransmitBandwidth.map("TransmitBandwidth" -> JsNumber(_)),
-          radio.Power.map("Power" -> JsNumber(_)),
-          radio.ModulationType.map("ModulationType" -> Json.toJson(_)),
-          radio.CryptoMode.map("CryptoMode" -> JsNumber(_)),
-          radio.CryptoSystem.map("CryptoSystem" -> JsNumber(_)),
-          radio.CryptoKey.map("CryptoKey" -> JsNumber(_)),
-          radio.AntennaPatternParameters.map("AntennaPatternParameters" -> Json.toJson(_)),
-          radio.FrequencyHopInUse.map("FrequencyHopInUse" -> JsBoolean(_)),
-          radio.PseudoNoiseInUse.map("PseudoNoiseInUse" -> JsBoolean(_)),
-          radio.TimeHopInUse.map("TimeHopInUse" -> JsBoolean(_))
-        )
-        radio.attributes match {
-          case Some(att) => JsObject(theList.flatten) ++ Json.toJson(att).asInstanceOf[JsObject]
-          case None => JsObject(theList.flatten)
+      def writes(p: RadioTransmitter) = {
+        val envx = Json.obj(
+          "MessageKind" -> JsString(p.MessageKind),
+          "ObjectType" -> JsString(p.ObjectType),
+          "ObjectName" -> JsString(p.ObjectName),
+          "Timestamp" -> Json.toJson(p.Timestamp),
+          "EntityIdentifier" -> Json.toJson(p.EntityIdentifier),
+          "HostObjectName" -> Json.toJson(p.HostObjectName),
+          "RadioIndex" -> Json.toJson(p.RadioIndex),
+          "RadioEntityType" -> Json.toJson(p.RadioEntityType),
+          "TransmitState" -> Json.toJson(p.TransmitState),
+          "InputSource" -> Json.toJson(p.InputSource),
+          "WorldAntennaLocation" -> Json.toJson(p.WorldAntennaLocation),
+          "RelativeAntennaLocation" -> Json.toJson(p.RelativeAntennaLocation),
+          "AntennaPatternType" -> Json.toJson(p.AntennaPatternType),
+          "Frequency" -> Json.toJson(p.Frequency),
+          "TransmitBandwidth" -> Json.toJson(p.TransmitBandwidth),
+          "Power" -> Json.toJson(p.Power),
+          "ModulationType" -> Json.toJson(p.ModulationType),
+          "CryptoMode" -> Json.toJson(p.CryptoMode),
+          "CryptoSystem" -> Json.toJson(p.CryptoSystem),
+          "CryptoKey" -> Json.toJson(p.CryptoKey),
+          "AntennaPatternParameters" -> Json.toJson(p.AntennaPatternParameters),
+          "FrequencyHopInUse" -> Json.toJson(p.FrequencyHopInUse),
+          "PseudoNoiseInUse" -> Json.toJson(p.PseudoNoiseInUse),
+          "TimeHopInUse" -> Json.toJson(p.TimeHopInUse))
+        p.attributes match {
+          case Some(att) => envx ++ Json.toJson[AttributesMap](att).asInstanceOf[JsObject]
+          case None => envx
         }
       }
     }
@@ -975,7 +974,7 @@ package object WebLvc {
 
     // "MessageKind" plus the list of field names but not "attributes"
     private val omitList = List("MessageKind") ++
-      (for (f <- Interaction.getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
+      (for (f <- Interaction("").getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
 
     val theReads = new Reads[Interaction] {
       def reads(js: JsValue): JsResult[Interaction] = {
@@ -1421,6 +1420,89 @@ package object WebLvc {
   }
 
   /**
+    * the Interaction message object
+    */
+  object InteractionMsg {
+
+    val theReads = new Reads[InteractionMsg] {
+      def reads(json: JsValue): JsResult[InteractionMsg] = {
+        val msgK = (json \ "MessageKind").as[String]
+        msgK match {
+          case "Interaction" =>
+            (json \ "InteractionType").as[String] match {
+              case `weaponFire` => WeaponFire.fmt.reads(json)
+              case `munitionDetonation` => MunitionDetonation.fmt.reads(json)
+              case `startResume` => StartResume.fmt.reads(json)
+              case `stopFreeze` => StopFreeze.fmt.reads(json)
+              case `radioSignal` => RadioSignal.fmt.reads(json)
+              // case `transferOwnership` => TransferOwnership.fmt.reads(json)     // todo
+              case _ => Interaction.fmt.reads(json)
+            }
+
+          case err => JsError(s"Error unknown InteractionMsg message kind: $err")
+        }
+      }
+    }
+
+    val theWrites = new Writes[InteractionMsg] {
+      def writes(msg: InteractionMsg) = {
+        msg match {
+          case s: WeaponFire => WeaponFire.fmt.writes(s)
+          case s: MunitionDetonation => MunitionDetonation.fmt.writes(s)
+          case s: StartResume => StartResume.fmt.writes(s)
+          case s: StopFreeze => StopFreeze.fmt.writes(s)
+          case s: RadioSignal => RadioSignal.fmt.writes(s)
+          // case s: TransferOwnership => TransferOwnership.fmt.writes(s)  // todo
+          case s: Interaction => Interaction.fmt.writes(s)
+          case _ => JsNull
+        }
+      }
+    }
+
+    implicit val fmt: Format[InteractionMsg] = Format(theReads, theWrites)
+  }
+
+
+  /**
+    * the AttributeUpdateMsg message object
+    */
+  object AttributeUpdateMsg {
+
+    val theReads = new Reads[AttributeUpdateMsg] {
+      def reads(json: JsValue): JsResult[AttributeUpdateMsg] = {
+        val msgK = (json \ "MessageKind").as[String]
+        msgK match {
+          case "AttributeUpdate" =>
+            // specify on ObjectType
+            (json \ "ObjectType").as[String] match {
+              case `phyEntity` => PhysicalEntity.fmt.reads(json)
+              case `aggEntity` => AggregateEntity.fmt.reads(json)
+              case `envEntity` => EnvironmentalEntity.fmt.reads(json)
+              case `radioTrans` => RadioTransmitter.fmt.reads(json)
+              case _ => AttributeUpdate.fmt.reads(json)
+            }
+          case err => JsError(s"Error unknown AttributeUpdateMsg message kind: $err")
+        }
+      }
+    }
+
+    val theWrites = new Writes[AttributeUpdateMsg] {
+      def writes(msg: AttributeUpdateMsg) = {
+        msg match {
+          case s: EnvironmentalEntity => EnvironmentalEntity.fmt.writes(s)
+          case s: PhysicalEntity => PhysicalEntity.fmt.writes(s)
+          case s: AggregateEntity => AggregateEntity.fmt.writes(s)
+          case s: RadioTransmitter => RadioTransmitter.fmt.writes(s)
+          case s: AttributeUpdate => AttributeUpdate.fmt.writes(s)
+          case _ => JsNull
+        }
+      }
+    }
+
+    implicit val fmt: Format[AttributeUpdateMsg] = Format(theReads, theWrites)
+  }
+
+  /**
     * the weblvc message object
     */
   object WeblvcMsg {
@@ -1433,15 +1515,7 @@ package object WebLvc {
           case "ConnectResponse" => ConnectResponse.fmt.reads(json)
           case "Configure" => Configure.fmt.reads(json)
           case "ConfigureResponse" => ConfigureResponse.fmt.reads(json)
-          case "AttributeUpdate" =>
-            // specify on ObjectType
-            (json \ "ObjectType").as[String] match {
-              case `phyEntity` => PhysicalEntity.fmt.reads(json)
-              case `aggEntity` => AggregateEntity.fmt.reads(json)
-              case `envEntity` => EnvironmentalEntity.fmt.reads(json)
-              case `radioTrans` => RadioTransmitter.fmt.reads(json)
-              case _ => AttributeUpdate.fmt.reads(json)
-            }
+          case "AttributeUpdate" => AttributeUpdateMsg.fmt.reads(json).asInstanceOf[JsResult[WeblvcMsg]]
           case "ObjectDeleted" => ObjectDeleted.fmt.reads(json)
           case "SubscribeObject" => SubscribeObject.fmt.reads(json)
           case "SubscribeInteraction" => SubscribeInteraction.fmt.reads(json)
@@ -1449,18 +1523,7 @@ package object WebLvc {
           case "UnsubscribeInteraction" => UnsubscribeInteraction.fmt.reads(json)
           case "StatusLogRequest" => StatusLogRequest.fmt.reads(json)
           case "StatusLogResponse" => StatusLogResponse.fmt.reads(json)
-          case "Interaction" =>
-            // specify on InteractionType
-            (json \ "InteractionType").as[String] match {
-              case `weaponFire` => WeaponFire.fmt.reads(json)
-              case `munitionDetonation` => MunitionDetonation.fmt.reads(json)
-              case `startResume` => StartResume.fmt.reads(json)
-              case `stopFreeze` => StopFreeze.fmt.reads(json)
-              case `radioSignal` => RadioSignal.fmt.reads(json)
-              // case `transferOwnership` => TransferOwnership.fmt.reads(json)     // todo
-              case _ => Interaction.fmt.reads(json)
-            }
-
+          case "Interaction" => InteractionMsg.fmt.reads(json).asInstanceOf[JsResult[WeblvcMsg]]
           case err => JsError(s"Error unknown Weblvc message kind: $err")
         }
       }
@@ -1468,16 +1531,12 @@ package object WebLvc {
 
     val theWrites = new Writes[WeblvcMsg] {
       def writes(msg: WeblvcMsg) = {
-        val jsVal: JsValue = msg match {
+        msg match {
           case s: Connect => Connect.fmt.writes(s)
           case s: ConnectResponse => ConnectResponse.fmt.writes(s)
           case s: Configure => Configure.fmt.writes(s)
           case s: ConfigureResponse => ConfigureResponse.fmt.writes(s)
-          case s: EnvironmentalEntity => EnvironmentalEntity.fmt.writes(s)
-          case s: PhysicalEntity => PhysicalEntity.fmt.writes(s)
-          case s: AggregateEntity => AggregateEntity.fmt.writes(s)
-          case s: RadioTransmitter => RadioTransmitter.fmt.writes(s)
-          case s: AttributeUpdate => AttributeUpdate.fmt.writes(s)
+          case s: AttributeUpdateMsg => AttributeUpdateMsg.fmt.writes(s)
           case s: ObjectDeleted => ObjectDeleted.fmt.writes(s)
           case s: SubscribeObject => SubscribeObject.fmt.writes(s)
           case s: SubscribeInteraction => SubscribeInteraction.fmt.writes(s)
@@ -1485,16 +1544,9 @@ package object WebLvc {
           case s: UnsubscribeInteraction => UnsubscribeInteraction.fmt.writes(s)
           case s: StatusLogRequest => StatusLogRequest.fmt.writes(s)
           case s: StatusLogResponse => StatusLogResponse.fmt.writes(s)
-          case s: WeaponFire => WeaponFire.fmt.writes(s)
-          case s: MunitionDetonation => MunitionDetonation.fmt.writes(s)
-          case s: StartResume => StartResume.fmt.writes(s)
-          case s: StopFreeze => StopFreeze.fmt.writes(s)
-          case s: RadioSignal => RadioSignal.fmt.writes(s)
-          // case s: TransferOwnership => TransferOwnership.fmt.writes(s)  // todo
-          case s: Interaction => Interaction.fmt.writes(s)
-          case _ => JsObject(Seq.empty)
+          case s: InteractionMsg => InteractionMsg.fmt.writes(s)
+          case _ => JsNull
         }
-        jsVal.asInstanceOf[JsObject]
       }
     }
 
@@ -1503,5 +1555,6 @@ package object WebLvc {
     // convenience
     def toJsonString(msg: WeblvcMsg) = Json.toJson[WeblvcMsg](msg).toString()
   }
+
 
 }

@@ -321,15 +321,15 @@ object WeblvcTest {
           "EnvironmentProcessActive" : true,
           "some_attributesqqq" : "strawberriesqqq",
           "SequenceNumber" : 5,
-                  "GeometryRecords" : [
-                  		{
-                  		"Type" : "LineString",
-                  		"coordinates" : [
-                  			[4437182.0232, -395338.0731, 873923.4663],
-                        [4437124.1523, -395341.2841, 873922.5517]
-                  		]
-                    }
-                  	]
+           "GeometryRecords" : [
+              {
+               "Type" : "LineString",
+                "coordinates" : [
+                 [4437182.0232, -395338.0731, 873923.4663],
+                 [4437124.1523, -395341.2841, 873922.5517]
+                 ]
+              }
+           ]
           }
         """.stripMargin
 
@@ -340,15 +340,15 @@ object WeblvcTest {
 
     env match {
       case None => println("\nno env")
-      case Some(phys) =>
-        val q = Json.toJson[WeblvcMsg](phys)
-        println("\nenv tojson: " + Json.prettyPrint(q))
+      case Some(e) =>
+        println("\nenv tojson1: " + Json.prettyPrint(Json.toJson[WeblvcMsg](e)))
+    //    println("\nenv tojson2: " + Json.prettyPrint(Json.toJson[AttributeUpdateMsg](e.asInstanceOf[AttributeUpdateMsg])))
 
-        val nameResult: JsResult[WeblvcMsg] = q.validate[WeblvcMsg]
-        nameResult match {
-          case s: JsSuccess[WeblvcMsg] => println("\nvalidate: " + s.get)
-          case e: JsError => println("\nErrors: " + JsError.toJson(e).toString())
-        }
+//        val nameResult: JsResult[WeblvcMsg] = q.validate[WeblvcMsg]
+//        nameResult match {
+//          case s: JsSuccess[WeblvcMsg] => println("\nvalidate: " + s.get)
+//          case e: JsError => println("\nErrors: " + JsError.toJson(e).toString())
+//        }
     }
   }
 
