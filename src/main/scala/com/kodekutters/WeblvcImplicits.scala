@@ -25,8 +25,6 @@ object WeblvcImplicits {
 
   implicit def EitherToOp(value: Either[String, Double]): Option[Either[String, Double]] = Option(value)
 
-  //
-
   implicit def CoordinatesToOp(value: Coordinates): Option[Coordinates] = Option(value)
 
   implicit def ServerDeadReckoningToOp(value: ServerDeadReckoning): Option[ServerDeadReckoning] = Option(value)
@@ -39,15 +37,17 @@ object WeblvcImplicits {
 
   implicit def KeyValueMapToOp(value: AttributesMap): Option[AttributesMap] = Option(value)
 
-  //
+  // ------------------X to Option[Either[x,y]]--------------------------------------------------
 
   implicit def StringToEither(value: String): Option[Either[String, Double]] = Option(Left(value))
 
   implicit def DoubleToEither(value: Double): Option[Either[String, Double]] = Option(Right(value))
 
-  //
+  // ------------------X to WeblvcMsg -----------------------------------------------------------
 
   implicit def SubscribeObjectToWeblvcMsg(value: SubscribeObject): WeblvcMsg = value.asInstanceOf[WeblvcMsg]
+
+  implicit def SubscribeInteractionToWeblvcMsg(value: SubscribeInteraction): WeblvcMsg = value.asInstanceOf[WeblvcMsg]
 
 
 }

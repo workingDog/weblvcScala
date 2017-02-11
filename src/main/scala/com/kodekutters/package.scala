@@ -3,18 +3,21 @@ package com.kodekutters
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json.Writes._
-import play.api.libs.json._
+import play.api.libs.json.{JsValue, _}
 import play.extras.geojson._
+import play.api.libs.json._
+import scala.language.implicitConversions
+import scala.language.postfixOps
 
 
 /**
   * WebLVC standard object model protocol
   *
-  * ref:  "WebLVC Draft Protocol Specification Version 0.4"
-  * see SISO: https://www.sisostds.org/StandardsActivities/DevelopmentGroups/WebLVCPDG.aspx
+  * ref:  "WebLVC Draft Protocol Specification Version 0.5 of 22 July 2016"
+  * see SISO: https://www.sisostds.org/DigitalLibrary.aspx?EntryId=45483
   *
   * Author: R. Wathelet
-  * version: 0.4
+  * version: 0.5
   */
 
 package object WebLvc {
@@ -69,6 +72,8 @@ package object WebLvc {
 
   }
 
+  import FilterSupport._
+  import FilterSupport.FilterType._
   import WebLvcSupport._
 
   //------------------------------------------------------------------------------------
@@ -88,63 +93,6 @@ package object WebLvc {
 
   object StatusLog {
     implicit val fmt = Json.format[StatusLog]
-  }
-
-  sealed trait MinMax
-
-  // todo
-  //  case class MinMax[T](min: T, max: T) extends MinMax
-  //
-  //  object MinMax {
-  //    implicit val fmt = Json.format[MinMax[T]]
-  //  }
-
-  /**
-    * to use in filters for testing values between the min and max values
-    *
-    * @param min the minimum lexicographical value
-    * @param max the maximum lexicographical value
-    */
-  case class MinMaxString(min: String, max: String) extends MinMax
-
-  object MinMaxString {
-    implicit val fmt = Json.format[MinMaxString]
-  }
-
-  /**
-    * to use in filters for testing values between the min and max values
-    *
-    * @param min the minimum value
-    * @param max the maximum value
-    */
-  case class MinMaxDouble(min: Double, max: Double) extends MinMax
-
-  object MinMaxDouble {
-    implicit val fmt = Json.format[MinMaxDouble]
-  }
-
-  /**
-    * to use in filters for testing values between the min and max values
-    *
-    * @param min the minimum array values
-    * @param max the maximum array values
-    */
-  case class MinMaxArrayDouble(min: Array[Double], max: Array[Double]) extends MinMax
-
-  object MinMaxArrayDouble {
-    implicit val fmt = Json.format[MinMaxArrayDouble]
-  }
-
-  /**
-    * to use in filters for testing values between the min and max values
-    *
-    * @param min the minimum array values
-    * @param max the maximum array values
-    */
-  case class MinMaxArrayInt(min: Array[Int], max: Array[Int]) extends MinMax
-
-  object MinMaxArrayInt {
-    implicit val fmt = Json.format[MinMaxArrayInt]
   }
 
   sealed trait Coordinates
@@ -249,6 +197,8 @@ package object WebLvc {
               case (key, JsNumber(value)) => key -> value // BigDecimal ?<----- todo
               case (key, JsBoolean(value)) => key -> value
               case (key, JsArray(value)) => key -> value
+              case (key, JsObject(value)) => key -> value // <--- todo
+              // case (key, JsArray(JsObject(value))) => key -> value
             }
             JsSuccess(new AttributesMap(theListMap.toMap))
 
@@ -273,6 +223,12 @@ package object WebLvc {
             case x: Array[BigDecimal] => k -> JsArray(for (i <- x.toSeq) yield JsNumber(i))
             case x: Array[String] => k -> JsArray(for (i <- x.toSeq) yield JsString(i))
             case x: Array[Boolean] => k -> JsArray(for (i <- x.toSeq) yield JsBoolean(i))
+
+            //    case x: MinMaxRange[_] => k -> Json.toJson(x)
+            //    case x: Array[MinMaxRange[_]] => k -> JsArray(for (i <- x.toSeq) yield Json.toJson[MinMaxRange[_]](i))
+
+            // ------ todo
+            //  case x: Array[AttributesMap] => k -> JsArray(for (i <- x.toSeq) yield Json.toJson[AttributesMap](i))
             case x => k -> JsNull //  <------ todo other types
           }
         }
@@ -284,21 +240,73 @@ package object WebLvc {
   }
 
   /**
-    * designate a generic weblvc message
+    * a filter.
+    *
+    * Note this is for used only in SubscribeObject message
+    *
+    * @param key   "all" or "any"
+    * @param value a (String, FilterType) tuple with FilterType values in an array of either:
+    *              a single value of String, Double, Int or Boolean
+    *              multiple values of String, Double, Int or Boolean
+    *              an object defining a minimum/maximum range
+    *              an object defining “any” or “all” nested properties
+    */
+  case class Filter(key: String, value: Tuple2[String, FilterType])
+
+  object Filter {
+
+    val theReads = new Reads[Filter] {
+      def reads(js: JsValue): JsResult[Filter] = {
+        (js \ "all").toOption match {
+          case Some(x) =>
+            val theHead = x.asInstanceOf[JsObject].fields.head
+            theHead._2.asOpt[FilterType] match {
+              case Some(z) => JsSuccess(new Filter("all", (theHead._1, z)))
+              case None => JsError("could not read filter: " + js)
+            }
+
+          case None =>
+            (js \ "any").toOption match {
+              case Some(x) =>
+                val theHead = x.asInstanceOf[JsObject].fields.head
+                theHead._2.asOpt[FilterType] match {
+                  case Some(z) => JsSuccess(new Filter("any", (theHead._1, z)))
+                  case None => JsError("could not read filter: " + js)
+                }
+
+              case None => JsError("could not read filter: " + js)
+            }
+        }
+      }
+    }
+
+    val theWrites = new Writes[Filter] {
+      def writes(f: Filter) = {
+        val jsarr = Json.toJson[FilterType](f.value._2)
+        Json.obj(f.key -> Json.obj(f.value._1 -> jsarr))
+      }
+    }
+
+    implicit val fmt = Format(theReads, theWrites)
+  }
+
+  /**
+    * represents a generic weblvc message
     */
   sealed trait WeblvcMsg {
     val MessageKind: String
   }
 
   /**
-    * designate an attribute update message
+    * represents an attribute update message
     */
   sealed trait AttributeUpdateMsg {
     val ObjectType: String
   }
 
   /**
-    * designate an Interaction message
+    * represents an Interaction message.
+    * Interaction messages are used to convey parameters of a simulation event or interaction.
     */
   sealed trait InteractionMsg {
     val InteractionType: String
@@ -353,7 +361,6 @@ package object WebLvc {
                              Errors: Option[Array[StatusLog]] = None) extends WeblvcMsg {
     val MessageKind = ConnectResponse.MessageKind
   }
-
 
   object ConnectResponse {
     val MessageKind = "ConnectResponse"
@@ -410,7 +417,6 @@ package object WebLvc {
              WorldBounds: MultiPolygon[LngLatAlt],
              ObjectBounds: Option[ObjectBounds]) = this(TimestampFormat, CoordinateReferenceSystem,
       ServerDeadReckoning, Option(Right(WorldBounds)), ObjectBounds)
-
   }
 
   object Configure {
@@ -475,7 +481,7 @@ package object WebLvc {
   //------------------------------------------------------------------------------------
 
   /**
-    * carry the values of the attributes of a WebLVC object.
+    * general attribute update message that holds the values of the attributes of a WebLVC object.
     *
     * @param ObjectName uniquely identifies the WebLVC object
     * @param ObjectType indicates the Object Type of the WebLVC Object for which the message is conveying an update
@@ -496,13 +502,14 @@ package object WebLvc {
   object AttributeUpdate {
     val MessageKind = "AttributeUpdate"
 
-    // "MessageKind" plus the list of field names but not "attributes"
-    private val omitList = List("MessageKind") ++
-      (for (f <- AttributeUpdate("", "").getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
+    // the list of all field names but not "attributes"
+    private val omitList = (for (f <- AttributeUpdate("", "").getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
 
     val theReads = new Reads[AttributeUpdate] {
       def reads(js: JsValue): JsResult[AttributeUpdate] = {
         if ((js \ "MessageKind").as[String] == MessageKind) {
+          println("\n----------in AttributeUpdate theReads")
+          omitList.foreach(println(_))
           JsSuccess(new AttributeUpdate(
             (js \ "ObjectType").as[String],
             (js \ "ObjectName").as[String],
@@ -546,9 +553,8 @@ package object WebLvc {
     val ObjectType = phyEntity
     val MessageKind = "AttributeUpdate"
 
-    // "MessageKind" and "ObjectType" plus the list of field names but not "attributes"
-    private val omitList = List("MessageKind", "ObjectType") ++
-      (for (f <- PhysicalEntity("").getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
+    // the list of all field names but not "attributes"
+    private val omitList = (for (f <- PhysicalEntity("").getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
 
     val theReads = new Reads[PhysicalEntity] {
       def reads(js: JsValue): JsResult[PhysicalEntity] = {
@@ -633,9 +639,8 @@ package object WebLvc {
     val ObjectType = aggEntity
     val MessageKind = "AttributeUpdate"
 
-    // "MessageKind" and "ObjectType" plus the list of field names but not "attributes"
-    private val omitList = List("MessageKind", "ObjectType") ++
-      (for (f <- AggregateEntity("").getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
+    // the list of all field names but not "attributes"
+    private val omitList = (for (f <- AggregateEntity("").getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
 
     val theReads = new Reads[AggregateEntity] {
       def reads(js: JsValue): JsResult[AggregateEntity] = {
@@ -734,9 +739,8 @@ package object WebLvc {
     val ObjectType = envEntity
     val MessageKind = "AttributeUpdate"
 
-    // "MessageKind" and "ObjectType" plus the list of field names but not "attributes"
-    private val omitList = List("MessageKind", "ObjectType") ++
-      (for (f <- EnvironmentalEntity("").getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
+    // the list of all field names but not "attributes"
+    private val omitList = (for (f <- EnvironmentalEntity("").getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
 
     val theReads = new Reads[EnvironmentalEntity] {
       def reads(js: JsValue): JsResult[EnvironmentalEntity] = {
@@ -837,9 +841,8 @@ package object WebLvc {
     val ObjectType = radioTrans
     val MessageKind = "AttributeUpdate"
 
-    // "MessageKind" and "ObjectType" plus the list of field names but not "attributes"
-    private val omitList = List("MessageKind", "ObjectType") ++
-      (for (f <- RadioTransmitter("").getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
+    // the list of all field names but not "attributes"
+    private val omitList = (for (f <- RadioTransmitter("").getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
 
     val theReads = new Reads[RadioTransmitter] {
       def reads(js: JsValue): JsResult[RadioTransmitter] = {
@@ -955,7 +958,7 @@ package object WebLvc {
   //------------------------------------------------------------------------------------
 
   /**
-    * notification of simulation events interactions
+    * general notification of simulation events interactions
     *
     * @param InteractionType indicates the type of the Interaction conveyed by a WebLVC message, similar to HLA InteractionClass or DIS PDU Kind
     * @param Timestamp       the time at which the data is valid.
@@ -972,9 +975,8 @@ package object WebLvc {
   object Interaction {
     val MessageKind = "Interaction"
 
-    // "MessageKind" plus the list of field names but not "attributes"
-    private val omitList = List("MessageKind") ++
-      (for (f <- Interaction("").getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
+    // the list of all field names but not "attributes"
+    private val omitList = (for (f <- Interaction("").getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
 
     val theReads = new Reads[Interaction] {
       def reads(js: JsValue): JsResult[Interaction] = {
@@ -1153,7 +1155,6 @@ package object WebLvc {
     val InteractionType = stopFreeze
     val MessageKind = "Interaction"
 
-
     val fmtx = Json.format[StopFreeze]
 
     val theReads = new Reads[StopFreeze] {
@@ -1226,31 +1227,34 @@ package object WebLvc {
     * @param ObjectType type of objects to which to subscribe. An exact match is required.
     * @param Filters    properties which specify attribute filters
     */
-  case class SubscribeObject(ObjectType: String, Filters: Option[AttributesMap] = None) extends WeblvcMsg {
-
+  case class SubscribeObject(ObjectType: String, Filters: Option[Filter] = None) extends WeblvcMsg {
     val MessageKind = SubscribeObject.MessageKind
   }
 
   object SubscribeObject {
     val MessageKind = "SubscribeObject"
 
-    val fmtx = Json.format[SubscribeObject]
-
     val theReads = new Reads[SubscribeObject] {
       def reads(js: JsValue): JsResult[SubscribeObject] = {
         if ((js \ "MessageKind").as[String] == MessageKind) {
-          fmtx.reads(js)
+          JsSuccess(new SubscribeObject((js \ "ObjectType").as[String], Json.fromJson[Filter](js).asOpt))
         } else {
-          JsError(s"Error reading message: $js")
+          JsError(s"Error reading SubscribeObject message: $js")
         }
       }
     }
 
     val theWrites = new Writes[SubscribeObject] {
-      def writes(c: SubscribeObject) = Json.obj("MessageKind" -> MessageKind) ++ fmtx.writes(c)
+      def writes(p: SubscribeObject) = {
+        val base = Json.obj("MessageKind" -> JsString(p.MessageKind), "ObjectType" -> JsString(p.ObjectType))
+        p.Filters match {
+          case Some(f) => base ++ Json.toJson(f).asInstanceOf[JsObject]
+          case None => base
+        }
+      }
     }
 
-    implicit val fmt = Format(theReads, theWrites)
+    implicit val fmt: Format[SubscribeObject] = Format(theReads, theWrites)
   }
 
   /**
@@ -1461,7 +1465,6 @@ package object WebLvc {
 
     implicit val fmt: Format[InteractionMsg] = Format(theReads, theWrites)
   }
-
 
   /**
     * the AttributeUpdateMsg message object
