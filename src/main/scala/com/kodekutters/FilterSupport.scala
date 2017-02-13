@@ -1,5 +1,6 @@
 package com.kodekutters
 
+import com.kodekutters.FilterSupport.FilterType.theWrites
 import com.kodekutters.WebLvc.Filter
 import com.typesafe.config.ConfigException.Null
 import play.api.libs.functional.syntax._
@@ -382,6 +383,100 @@ object FilterSupport {
     }
 
     implicit val fmt: Format[ArrayFilterType] = Format(theReads, theWrites)
+  }
+
+
+  //-------------------------------------------------------------------------------------
+  //------------------filter expressions-------------------------------------------------
+  //-------------------------------------------------------------------------------------
+
+  sealed trait FilterExpType
+
+  /**
+    * "and" filter expression accept an array of filters,
+    * and passes if and only if every filter passes.
+    *
+    * @param value an Array of Filters
+    */
+  case class FilterAnd(value: Array[Filter]) extends FilterExpType {
+    val key = FilterAnd.key
+  }
+
+  object FilterAnd {
+    val key = "and"
+
+    val theReads = new Reads[FilterAnd] {
+      def reads(js: JsValue): JsResult[FilterAnd] = {
+        js.asOpt[Array[Filter]] match {
+          case Some(filterArr) => JsSuccess(new FilterAnd(filterArr))
+          case None => JsError("could not read FilterAnd: " + js)
+        }
+      }
+    }
+
+    val theWrites = new Writes[FilterAnd] {
+      def writes(arr: FilterAnd) = JsArray(for (i <- arr.value) yield Json.toJson(i))
+    }
+
+    implicit val fmt = Format(theReads, theWrites)
+  }
+
+  /**
+    * "or" filter expression accept an array of filters,
+    * and passes if and only if at least one filter passes.
+    *
+    * @param value an Array of Filters
+    */
+  case class FilterOr(value: Array[Filter]) extends FilterExpType {
+    val key = FilterAnd.key
+  }
+
+  object FilterOr {
+    val key = "or"
+
+    val theReads = new Reads[FilterOr] {
+      def reads(js: JsValue): JsResult[FilterOr] = {
+        js.asOpt[Array[Filter]] match {
+          case Some(filterArr) => JsSuccess(new FilterOr(filterArr))
+          case None => JsError("could not read FilterOr: " + js)
+        }
+      }
+    }
+
+    val theWrites = new Writes[FilterOr] {
+      def writes(arr: FilterOr) = JsArray(for (i <- arr.value) yield Json.toJson(i))
+    }
+
+    implicit val fmt = Format(theReads, theWrites)
+  }
+
+  /**
+    * "or" filter expression accept an array of filters,
+    * and passes if and only if every filter passes.
+    *
+    * @param value an Array of Filters
+    */
+  case class FilterNot(value: Filter) extends FilterExpType {
+    val key = FilterAnd.key
+  }
+
+  object FilterNot {
+    val key = "not"
+
+    val theReads = new Reads[FilterNot] {
+      def reads(js: JsValue): JsResult[FilterNot] = {
+        js.asOpt[Filter] match {
+          case Some(filter) => JsSuccess(new FilterNot(filter))
+          case None => JsError("could not read FilterNot: " + js)
+        }
+      }
+    }
+
+    val theWrites = new Writes[FilterNot] {
+      def writes(arr: FilterNot) = Json.toJson[Filter](arr.value)
+    }
+
+    implicit val fmt = Format(theReads, theWrites)
   }
 
 

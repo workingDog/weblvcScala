@@ -73,7 +73,6 @@ package object WebLvc {
   }
 
   import FilterSupport._
-  import FilterSupport.FilterType._
   import WebLvcSupport._
 
   //------------------------------------------------------------------------------------
@@ -284,6 +283,51 @@ package object WebLvc {
       def writes(f: Filter) = {
         val jsarr = Json.toJson[FilterType](f.value._2)
         Json.obj(f.key -> Json.obj(f.value._1 -> jsarr))
+      }
+    }
+
+    implicit val fmt = Format(theReads, theWrites)
+  }
+
+  /**
+    * Filter expressions combine different filters into a single result.
+    * Boolean operators “and”, “or” and “not” are available. The Boolean operators
+    * are themselves filters allowing composition of Boolean expressions of filters.
+    *
+    * Note this is for used only in SubscribeObject message
+    *
+    * @param key   "and" "or" "not"
+    * @param value a FilterExpType
+    */
+  case class FilterExpression(key: String, value: FilterExpType)
+
+  object FilterExpression {
+
+    val theReads = new Reads[FilterExpression] {
+      def reads(json: JsValue): JsResult[FilterExpression] = {
+        (json \ "and").asOpt[FilterAnd] match {
+          case Some(x) => JsSuccess(new FilterExpression(FilterAnd.key, x))
+          case None =>
+            (json \ "or").asOpt[FilterOr] match {
+              case Some(x) => JsSuccess(new FilterExpression(FilterOr.key, x))
+              case None =>
+                (json \ "not").asOpt[FilterNot] match {
+                  case Some(x) => JsSuccess(new FilterExpression(FilterNot.key, x))
+                  case None => JsError("could not read FilterExpression: " + json)
+                }
+            }
+        }
+      }
+    }
+
+    val theWrites = new Writes[FilterExpression] {
+      def writes(fx: FilterExpression) = {
+        fx.value match {
+          case s: FilterAnd => Json.obj("and" -> FilterAnd.fmt.writes(s))
+          case s: FilterOr => Json.obj("or" -> FilterOr.fmt.writes(s))
+          case s: FilterNot => Json.obj("not" -> FilterNot.fmt.writes(s))
+          case _ => JsNull
+        }
       }
     }
 
@@ -1227,7 +1271,9 @@ package object WebLvc {
     * @param ObjectType type of objects to which to subscribe. An exact match is required.
     * @param Filters    properties which specify attribute filters
     */
-  case class SubscribeObject(ObjectType: String, Filters: Option[Filter] = None) extends WeblvcMsg {
+  case class SubscribeObject(ObjectType: String,
+                             Filters: Option[Either[Filter, FilterExpression]] = None)
+                             extends WeblvcMsg {
     val MessageKind = SubscribeObject.MessageKind
   }
 
@@ -1237,7 +1283,8 @@ package object WebLvc {
     val theReads = new Reads[SubscribeObject] {
       def reads(js: JsValue): JsResult[SubscribeObject] = {
         if ((js \ "MessageKind").as[String] == MessageKind) {
-          JsSuccess(new SubscribeObject((js \ "ObjectType").as[String], Json.fromJson[Filter](js).asOpt))
+          JsSuccess(new SubscribeObject((js \ "ObjectType").as[String],
+            Json.fromJson[Either[Filter, FilterExpression]](js).asOpt))
         } else {
           JsError(s"Error reading SubscribeObject message: $js")
         }

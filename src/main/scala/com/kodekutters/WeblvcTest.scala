@@ -32,7 +32,54 @@ object WeblvcTest {
 //    WeaponFire()
 //    testFilters()
 
-    testConnectMinMax()
+//    testConnectMinMax()
+
+    testFilterX()
+  }
+
+  def testFilterX() = {
+    val js1 =
+      """{
+        "MessageKind" : "SubscribeObject",
+        "ObjectType" : "WebLVC:PhysicalEntity",
+        "and": [
+         	{
+         	 "all": { "Marking" : [ "TankABC" ] }
+           },
+        	{
+        	"all": { "Dimensions" : [ {"min" : [0,0,0], "max" : [10,10,10]} ] }
+          }
+        ]
+        }""".stripMargin
+
+    val js = """{
+                "MessageKind" : "SubscribeObject",
+                "ObjectType" : "WebLVC:PhysicalEntity",
+                 "not": {"all": {
+                "Marking" : [ "TankABC" ]
+                }}}
+                """.stripMargin
+
+    val js2 =
+      """{
+        "MessageKind" : "SubscribeObject",
+        "ObjectType" : "WebLVC:PhysicalEntity",
+        "or": [
+         	{
+         	 "all": { "Marking" : [ "TankABC" ] }
+           },
+        	{
+        	"all": { "Dimensions" : [ {"min" : [0,0,0], "max" : [10,10,10]} ] }
+          }
+        ]
+        }""".stripMargin
+
+    val prs = Json.parse(js)
+
+    val obj = Json.fromJson[WeblvcMsg](prs).asOpt
+    println("\nobj fromJson: " + obj)
+    println("\nobj toJson: " + Json.toJson(obj))
+
   }
 
   def testConnectMinMax() = {
