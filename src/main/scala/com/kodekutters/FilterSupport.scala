@@ -1,8 +1,7 @@
 package com.kodekutters
 
-import com.kodekutters.FilterSupport.FilterType.theWrites
+import scala.util.control.Breaks._
 import com.kodekutters.WebLvc.Filter
-import com.typesafe.config.ConfigException.Null
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json.Writes._
@@ -82,7 +81,7 @@ object FilterSupport {
     implicit val fmt: Format[FilterType] = Format(theReads, theWrites)
   }
 
-  case class StringArrayFilter(v: Array[String]) extends FilterType
+  case class StringArrayFilter(value: Array[String]) extends FilterType
 
   object StringArrayFilter {
     implicit def fmt: Format[StringArrayFilter] = new Format[StringArrayFilter] {
@@ -93,11 +92,11 @@ object FilterSupport {
         }
       }
 
-      def writes(f: StringArrayFilter) = Json.toJson(f.v)
+      def writes(f: StringArrayFilter) = Json.toJson(f.value)
     }
   }
 
-  case class IntArrayFilter(v: Array[Int]) extends FilterType
+  case class IntArrayFilter(value: Array[Int]) extends FilterType
 
   object IntArrayFilter {
     implicit def fmt: Format[IntArrayFilter] = new Format[IntArrayFilter] {
@@ -107,11 +106,11 @@ object FilterSupport {
           case None => JsError("could not read IntFilter: " + json)
         }
 
-      def writes(f: IntArrayFilter) = Json.toJson(f.v)
+      def writes(f: IntArrayFilter) = Json.toJson(f.value)
     }
   }
 
-  case class DoubleArrayFilter(v: Array[Double]) extends FilterType
+  case class DoubleArrayFilter(value: Array[Double]) extends FilterType
 
   object DoubleArrayFilter {
     implicit def fmt: Format[DoubleArrayFilter] = new Format[DoubleArrayFilter] {
@@ -122,11 +121,11 @@ object FilterSupport {
         }
       }
 
-      def writes(f: DoubleArrayFilter) = Json.toJson(f.v)
+      def writes(f: DoubleArrayFilter) = Json.toJson(f.value)
     }
   }
 
-  case class BooleanArrayFilter(v: Array[Boolean]) extends FilterType
+  case class BooleanArrayFilter(value: Array[Boolean]) extends FilterType
 
   object BooleanArrayFilter {
     implicit def fmt: Format[BooleanArrayFilter] = new Format[BooleanArrayFilter] {
@@ -137,22 +136,22 @@ object FilterSupport {
         }
       }
 
-      def writes(f: BooleanArrayFilter) = Json.toJson(f.v)
+      def writes(f: BooleanArrayFilter) = Json.toJson(f.value)
     }
   }
 
   /**
     * to use in filters for testing values between the min and max values
     */
-  case class MinMaxRange[T](min: T, max: T) extends FilterType
-
-  object MinMaxRange {
-    implicit def fmt[T](implicit fmt: Format[T]): Format[MinMaxRange[T]] = new Format[MinMaxRange[T]] {
-      def reads(json: JsValue): JsResult[MinMaxRange[T]] = JsSuccess(new MinMaxRange[T]((json \ "min").as[T], (json \ "max").as[T]))
-
-      def writes(r: MinMaxRange[T]) = JsObject(Seq("min" -> Json.toJson(r.min), "max" -> Json.toJson(r.max)))
-    }
-  }
+  //  case class MinMaxRange[T](min: T, max: T) extends FilterType
+  //
+  //  object MinMaxRange {
+  //    implicit def fmt[T](implicit fmt: Format[T]): Format[MinMaxRange[T]] = new Format[MinMaxRange[T]] {
+  //      def reads(json: JsValue): JsResult[MinMaxRange[T]] = JsSuccess(new MinMaxRange[T]((json \ "min").as[T], (json \ "max").as[T]))
+  //
+  //      def writes(r: MinMaxRange[T]) = JsObject(Seq("min" -> Json.toJson(r.min), "max" -> Json.toJson(r.max)))
+  //    }
+  //  }
 
   /**
     * to use in filters for testing values between the min and max values
@@ -160,7 +159,20 @@ object FilterSupport {
     * @param min the minimum lexicographical value
     * @param max the maximum lexicographical value
     */
-  case class MinMaxString(min: String, max: String) extends FilterType
+  case class MinMaxString(min: String, max: String) extends FilterType {
+
+    def isInRange(test: String): Boolean = {
+      test.compare(min) match {
+        case 0 | 1 =>
+          test.compare(max) match {
+            case 0 | -1 => true
+            case 1 => false
+          }
+        case -1 => false
+      }
+    }
+
+  }
 
   object MinMaxString {
     implicit val fmt = Json.format[MinMaxString]
@@ -192,7 +204,7 @@ object FilterSupport {
     implicit val fmt: Format[ArrayOfMinMaxArrayString] = Format(theReads, theWrites)
   }
 
-  case class ArrayOfMinMaxString(v: Array[MinMaxString]) extends FilterType
+  case class ArrayOfMinMaxString(value: Array[MinMaxString]) extends FilterType
 
   object ArrayOfMinMaxString {
 
@@ -206,7 +218,7 @@ object FilterSupport {
     }
 
     val theWrites = new Writes[ArrayOfMinMaxString] {
-      def writes(arr: ArrayOfMinMaxString) = JsArray(for (i <- arr.v) yield Json.toJson(i))
+      def writes(arr: ArrayOfMinMaxString) = JsArray(for (i <- arr.value) yield Json.toJson(i))
     }
 
     implicit val fmt: Format[ArrayOfMinMaxString] = Format(theReads, theWrites)
@@ -219,13 +231,19 @@ object FilterSupport {
     * @param max the maximum value
     */
 
-  case class MinMaxInt(min: Int, max: Int) extends FilterType
+  case class MinMaxInt(min: Int, max: Int) extends FilterType {
+
+    def isInRange(test: Int): Boolean = if (test >= min && test <= max) true else false
+
+  }
 
   object MinMaxInt {
     implicit val fmt = Json.format[MinMaxInt]
+
+
   }
 
-  case class ArrayOfMinMaxInt(v: Array[MinMaxInt]) extends FilterType
+  case class ArrayOfMinMaxInt(value: Array[MinMaxInt]) extends FilterType
 
   object ArrayOfMinMaxInt {
 
@@ -239,19 +257,35 @@ object FilterSupport {
     }
 
     val theWrites = new Writes[ArrayOfMinMaxInt] {
-      def writes(arr: ArrayOfMinMaxInt) = JsArray(for (i <- arr.v) yield Json.toJson(i))
+      def writes(arr: ArrayOfMinMaxInt) = JsArray(for (i <- arr.value) yield Json.toJson(i))
     }
 
     implicit val fmt: Format[ArrayOfMinMaxInt] = Format(theReads, theWrites)
   }
 
-  case class MinMaxArrayInt(min: Array[Int], max: Array[Int]) extends FilterType
+  case class MinMaxArrayInt(min: Array[Int], max: Array[Int]) extends FilterType {
+
+    def isInRange(test: Int): Boolean = {
+      var result = false
+      breakable {
+        // assume min.length == max.length
+        for (i <- 0 to min.length) {
+          if (test >= min(i) && test <= max(i)) result = true else {
+            result = false
+            break
+          }
+        }
+      }
+      result
+    }
+
+  }
 
   object MinMaxArrayInt {
     implicit val fmt = Json.format[MinMaxArrayInt]
   }
 
-  case class ArrayOfMinMaxArrayInt(v: Array[MinMaxArrayInt]) extends FilterType
+  case class ArrayOfMinMaxArrayInt(value: Array[MinMaxArrayInt]) extends FilterType
 
   object ArrayOfMinMaxArrayInt {
 
@@ -265,7 +299,7 @@ object FilterSupport {
     }
 
     val theWrites = new Writes[ArrayOfMinMaxArrayInt] {
-      def writes(arr: ArrayOfMinMaxArrayInt) = JsArray(for (i <- arr.v) yield Json.toJson(i))
+      def writes(arr: ArrayOfMinMaxArrayInt) = JsArray(for (i <- arr.value) yield Json.toJson(i))
     }
 
     implicit val fmt: Format[ArrayOfMinMaxArrayInt] = Format(theReads, theWrites)
@@ -277,13 +311,15 @@ object FilterSupport {
     * @param min the minimum array values
     * @param max the maximum array values
     */
-  case class MinMaxDouble(min: Double, max: Double) extends FilterType
+  case class MinMaxDouble(min: Double, max: Double) extends FilterType {
+    def isInRange(test: Double): Boolean = if (test >= min && test <= max) true else false
+  }
 
   object MinMaxDouble {
     implicit val fmt = Json.format[MinMaxDouble]
   }
 
-  case class ArrayOfMinMaxDouble(v: Array[MinMaxDouble]) extends FilterType
+  case class ArrayOfMinMaxDouble(value: Array[MinMaxDouble]) extends FilterType
 
   object ArrayOfMinMaxDouble {
 
@@ -297,7 +333,7 @@ object FilterSupport {
     }
 
     val theWrites = new Writes[ArrayOfMinMaxDouble] {
-      def writes(arr: ArrayOfMinMaxDouble) = JsArray(for (i <- arr.v) yield Json.toJson(i))
+      def writes(arr: ArrayOfMinMaxDouble) = JsArray(for (i <- arr.value) yield Json.toJson(i))
     }
 
     implicit val fmt: Format[ArrayOfMinMaxDouble] = Format(theReads, theWrites)
@@ -338,9 +374,9 @@ object FilterSupport {
   /**
     * nested filters
     *
-    * @param v
+    * @param value
     */
-  case class NestedFilterType(v: Filter) extends FilterType
+  case class NestedFilterType(value: Filter) extends FilterType
 
   object NestedFilterType {
 
@@ -363,9 +399,9 @@ object FilterSupport {
   /**
     * nested array of filters
     *
-    * @param v
+    * @param value
     */
-  case class ArrayFilterType(v: Array[Filter]) extends FilterType
+  case class ArrayFilterType(value: Array[Filter]) extends FilterType
 
   object ArrayFilterType {
 
@@ -379,7 +415,7 @@ object FilterSupport {
     }
 
     val theWrites = new Writes[ArrayFilterType] {
-      def writes(arr: ArrayFilterType) = JsArray(for (i <- arr.v) yield Json.toJson(i))
+      def writes(arr: ArrayFilterType) = JsArray(for (i <- arr.value) yield Json.toJson(i))
     }
 
     implicit val fmt: Format[ArrayFilterType] = Format(theReads, theWrites)

@@ -346,6 +346,8 @@ package object WebLvc {
     */
   sealed trait AttributeUpdateMsg {
     val ObjectType: String
+    val ObjectName: String
+    val Timestamp: Option[Either[String, Double]]
   }
 
   /**
@@ -354,6 +356,7 @@ package object WebLvc {
     */
   sealed trait InteractionMsg {
     val InteractionType: String
+    val Timestamp: Option[Either[String, Double]]
   }
 
   //------------------------------------------------------------------------------------

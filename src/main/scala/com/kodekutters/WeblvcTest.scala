@@ -52,7 +52,7 @@ object WeblvcTest {
         ]
         }""".stripMargin
 
-    val js = """{
+    val js3 = """{
                 "MessageKind" : "SubscribeObject",
                 "ObjectType" : "WebLVC:PhysicalEntity",
                  "not": {"all": {
@@ -73,6 +73,12 @@ object WeblvcTest {
           }
         ]
         }""".stripMargin
+
+    val js =
+      """{"MessageKind":"SubscribeObject","ObjectType":"WebLVC:PhysicalEntity",
+        "all" : {
+           "Coordinates" : [ {"all": { "DeadReckoningAlgorithm": [ 2, 4 ] } } ]
+         	} }""".stripMargin
 
     val prs = Json.parse(js)
 
@@ -121,23 +127,23 @@ object WeblvcTest {
 
   def testMinMax() = {
 
-    val js1 = """{"min" : 0, "max" : 5}""".stripMargin
-    val js2 = """{"min" : "a", "max" : "d"}""".stripMargin
-    val js3 = """{"min" : 1.6, "max" : 2.4}""".stripMargin
-    val js4 = """{"min" : [0,0,0], "max" : [10,10,10]}""".stripMargin
-    val js5 = """{"min" : [0.1,0.2,0.3], "max" : [10.1,10.2,10.3]}""".stripMargin
-
-    val r1 = new MinMaxRange[Int](6, 8)
-    println("r1: " + r1 + " tojson: "+ Json.toJson[MinMaxRange[Int]](r1) +" fromJson: " + Json.fromJson[MinMaxRange[Int]](Json.parse(js1)))
-
-    val r2 = new MinMaxRange[String]("rock", "hard")
-    println("r2: " + r2 + " tojson: "+ Json.toJson[MinMaxRange[String]](r2) +" fromJson: " + Json.fromJson[MinMaxRange[String]](Json.parse(js2)))
-
-    val r3 = new MinMaxRange[Double](1.2, 3.4)
-    println("r3: " + r3 + " tojson: "+ Json.toJson[MinMaxRange[Double]](r3) +" fromJson: " + Json.fromJson[MinMaxRange[Double]](Json.parse(js3)))
-
-    val r4 = new MinMaxRange[Array[Int]](Array(0,1,2), Array(3,4,5))
-    println("r4: " + r4 + " tojson: "+ Json.toJson[MinMaxRange[Array[Int]]](r4) +" fromJson: " + Json.fromJson[MinMaxRange[Array[Int]]](Json.parse(js4)))
+//    val js1 = """{"min" : 0, "max" : 5}""".stripMargin
+//    val js2 = """{"min" : "a", "max" : "d"}""".stripMargin
+//    val js3 = """{"min" : 1.6, "max" : 2.4}""".stripMargin
+//    val js4 = """{"min" : [0,0,0], "max" : [10,10,10]}""".stripMargin
+//    val js5 = """{"min" : [0.1,0.2,0.3], "max" : [10.1,10.2,10.3]}""".stripMargin
+//
+//    val r1 = new MinMaxRange[Int](6, 8)
+//    println("r1: " + r1 + " tojson: "+ Json.toJson[MinMaxRange[Int]](r1) +" fromJson: " + Json.fromJson[MinMaxRange[Int]](Json.parse(js1)))
+//
+//    val r2 = new MinMaxRange[String]("rock", "hard")
+//    println("r2: " + r2 + " tojson: "+ Json.toJson[MinMaxRange[String]](r2) +" fromJson: " + Json.fromJson[MinMaxRange[String]](Json.parse(js2)))
+//
+//    val r3 = new MinMaxRange[Double](1.2, 3.4)
+//    println("r3: " + r3 + " tojson: "+ Json.toJson[MinMaxRange[Double]](r3) +" fromJson: " + Json.fromJson[MinMaxRange[Double]](Json.parse(js3)))
+//
+//    val r4 = new MinMaxRange[Array[Int]](Array(0,1,2), Array(3,4,5))
+//    println("r4: " + r4 + " tojson: "+ Json.toJson[MinMaxRange[Array[Int]]](r4) +" fromJson: " + Json.fromJson[MinMaxRange[Array[Int]]](Json.parse(js4)))
 
   }
 
