@@ -347,7 +347,7 @@ package object WebLvc {
   sealed trait AttributeUpdateMsg {
     val ObjectType: String
     val ObjectName: String
-    val Timestamp: Option[Either[String, Double]]
+    val Timestamp: Option[Either[String, Long]]
   }
 
   /**
@@ -356,7 +356,7 @@ package object WebLvc {
     */
   sealed trait InteractionMsg {
     val InteractionType: String
-    val Timestamp: Option[Either[String, Double]]
+    val Timestamp: Option[Either[String, Long]]
   }
 
   //------------------------------------------------------------------------------------
@@ -443,6 +443,7 @@ package object WebLvc {
     * @param WorldBounds               a GeoJSON geometry object of type “Polygon” or “MultiPolygon”
     * @param ObjectBounds              specifies the name of a WebLVC object, and a range around the object within which the client is interested in updates
     */
+  // todo add ---> attributes: Option[AttributesMap] = None
   case class Configure(TimestampFormat: Option[Int] = None,
                        CoordinateReferenceSystem: Option[String] = Some(defaultECEFCartesian),
                        ServerDeadReckoning: Option[ServerDeadReckoning] = None,
@@ -492,6 +493,7 @@ package object WebLvc {
     * server response to a client Configure request.
     * set of Booleans indicating success of the configurations.
     */
+  // todo add ---> attributes: Option[AttributesMap] = None
   case class ConfigureResponse(TimestampFormat: Option[Boolean] = None,
                                CoordinateReferenceSystem: Option[Boolean] = None,
                                ServerDeadReckoning: Option[Boolean] = None,
@@ -536,12 +538,12 @@ package object WebLvc {
     * @param attributes other possible attributes as a map of (key,value)
     */
   case class AttributeUpdate(ObjectName: String, ObjectType: String,
-                             Timestamp: Option[Either[String, Double]] = None,
+                             Timestamp: Option[Either[String, Long]] = None,
                              attributes: Option[AttributesMap] = None) extends WeblvcMsg with AttributeUpdateMsg {
 
     def this(ObjectName: String, ObjectType: String, Timestamp: String, attributes: AttributesMap) = this(ObjectName, ObjectType, Option(Left(Timestamp)), Option(attributes))
 
-    def this(ObjectName: String, ObjectType: String, Timestamp: Double, attributes: AttributesMap) = this(ObjectName, ObjectType, Option(Right(Timestamp)), Option(attributes))
+    def this(ObjectName: String, ObjectType: String, Timestamp: Long, attributes: AttributesMap) = this(ObjectName, ObjectType, Option(Right(Timestamp)), Option(attributes))
 
     val MessageKind = AttributeUpdate.MessageKind
   }
@@ -560,7 +562,7 @@ package object WebLvc {
           JsSuccess(new AttributeUpdate(
             (js \ "ObjectType").as[String],
             (js \ "ObjectName").as[String],
-            (js \ "Timestamp").asOpt[Either[String, Double]],
+            (js \ "Timestamp").asOpt[Either[String, Long]],
             AttributesMap.readAttributes(js, omitList)))
         }
         else {
@@ -584,7 +586,7 @@ package object WebLvc {
     * carry the values of the attributes of a PhysicalEntity
     */
   case class PhysicalEntity(ObjectName: String,
-                            Timestamp: Option[Either[String, Double]] = None,
+                            Timestamp: Option[Either[String, Long]] = None,
                             EntityType: Option[Array[Int]] = None,
                             EntityIdentifier: Option[Array[Int]] = None,
                             Coordinates: Option[Coordinates] = None,
@@ -608,7 +610,7 @@ package object WebLvc {
         if ((js \ "MessageKind").as[String] == MessageKind && (js \ "ObjectType").as[String] == ObjectType) {
           JsSuccess(new PhysicalEntity(
             (js \ "ObjectName").as[String],
-            (js \ "Timestamp").asOpt[Either[String, Double]],
+            (js \ "Timestamp").asOpt[Either[String, Long]],
             (js \ "EntityType").asOpt[Array[Int]],
             (js \ "EntityIdentifier").asOpt[Array[Int]],
             (js \ "Coordinates").asOpt[Coordinates],
@@ -662,7 +664,7 @@ package object WebLvc {
     * carry the values of the attributes of an AggregateEntity
     */
   case class AggregateEntity(ObjectName: String,
-                             Timestamp: Option[Either[String, Double]] = None,
+                             Timestamp: Option[Either[String, Long]] = None,
                              EntityType: Option[Array[Int]] = None,
                              EntityIdentifier: Option[Array[Int]] = None,
                              Coordinates: Option[Coordinates] = None,
@@ -694,7 +696,7 @@ package object WebLvc {
         if ((js \ "MessageKind").as[String] == MessageKind && (js \ "ObjectType").as[String] == ObjectType) {
           JsSuccess(new AggregateEntity(
             (js \ "ObjectName").as[String],
-            (js \ "Timestamp").asOpt[Either[String, Double]],
+            (js \ "Timestamp").asOpt[Either[String, Long]],
             (js \ "EntityType").asOpt[Array[Int]],
             (js \ "EntityIdentifier").asOpt[Array[Int]],
             (js \ "Coordinates").asOpt[Coordinates],
@@ -769,7 +771,7 @@ package object WebLvc {
     * carry the values of the attributes of a EnvironmentalEntity
     */
   case class EnvironmentalEntity(ObjectName: String,
-                                 Timestamp: Option[Either[String, Double]] = None,
+                                 Timestamp: Option[Either[String, Long]] = None,
                                  `Type`: Option[Array[Int]] = None,
                                  ProcessIdentifier: Option[Array[Int]] = None,
                                  ModelType: Option[Int] = None,
@@ -794,7 +796,7 @@ package object WebLvc {
         if ((js \ "MessageKind").as[String] == MessageKind && (js \ "ObjectType").as[String] == ObjectType) {
           JsSuccess(new EnvironmentalEntity(
             (js \ "ObjectName").as[String],
-            (js \ "Timestamp").asOpt[Either[String, Double]],
+            (js \ "Timestamp").asOpt[Either[String, Long]],
             (js \ "Type").asOpt[Array[Int]],
             (js \ "ProcessIdentifier").asOpt[Array[Int]],
             (js \ "ModelType").asOpt[Int],
@@ -857,7 +859,7 @@ package object WebLvc {
     * carry the values of the attributes of a RadioTransmitter
     */
   case class RadioTransmitter(ObjectName: String,
-                              Timestamp: Option[Either[String, Double]] = None,
+                              Timestamp: Option[Either[String, Long]] = None,
                               EntityIdentifier: Option[Array[Int]] = None,
                               HostObjectName: Option[String] = None,
                               RadioIndex: Option[Int] = None,
@@ -896,7 +898,7 @@ package object WebLvc {
         if ((js \ "MessageKind").as[String] == MessageKind && (js \ "ObjectType").as[String] == ObjectType) {
           JsSuccess(new RadioTransmitter(
             (js \ "ObjectName").as[String],
-            (js \ "Timestamp").asOpt[Either[String, Double]],
+            (js \ "Timestamp").asOpt[Either[String, Long]],
             (js \ "EntityIdentifier").asOpt[Array[Int]],
             (js \ "HostObjectName").asOpt[String],
             (js \ "RadioIndex").asOpt[Int],
@@ -968,13 +970,13 @@ package object WebLvc {
     * @param ObjectName the object name
     * @param Timestamp  the time at which the data is valid
     */
-  case class ObjectDeleted(ObjectName: String, Timestamp: Option[Either[String, Double]] = None) extends WeblvcMsg {
+  case class ObjectDeleted(ObjectName: String, Timestamp: Option[Either[String, Long]] = None) extends WeblvcMsg {
 
     val MessageKind = ObjectDeleted.MessageKind
 
     def this(ObjectName: String, Timestamp: String) = this(ObjectName, Option(Left(Timestamp)))
 
-    def this(ObjectName: String, Timestamp: Double) = this(ObjectName, Option(Right(Timestamp)))
+    def this(ObjectName: String, Timestamp: Long) = this(ObjectName, Option(Right(Timestamp)))
 
   }
 
@@ -1013,7 +1015,7 @@ package object WebLvc {
     */
 
   case class Interaction(InteractionType: String,
-                         Timestamp: Option[Either[String, Double]] = None,
+                         Timestamp: Option[Either[String, Long]] = None,
                          attributes: Option[AttributesMap] = None) extends WeblvcMsg with InteractionMsg {
 
     val MessageKind = Interaction.MessageKind
@@ -1030,7 +1032,7 @@ package object WebLvc {
         if ((js \ "MessageKind").as[String] == MessageKind) {
           JsSuccess(new Interaction(
             (js \ "InteractionType").as[String],
-            (js \ "Timestamp").asOpt[Either[String, Double]],
+            (js \ "Timestamp").asOpt[Either[String, Long]],
             AttributesMap.readAttributes(js, omitList)))
         } else {
           JsError(s"Error reading message: $js")
@@ -1040,7 +1042,7 @@ package object WebLvc {
 
     val pWrites: Writes[Interaction] =
       ((JsPath \ "InteractionType").write[String] and
-        (JsPath \ "Timestamp").writeNullable[Either[String, Double]] and
+        (JsPath \ "Timestamp").writeNullable[Either[String, Long]] and
         JsPath.writeNullable[AttributesMap]) (unlift(Interaction.unapply))
 
     val theWrites = new Writes[Interaction] {
@@ -1058,7 +1060,7 @@ package object WebLvc {
   /**
     * WeaponFire interaction message
     */
-  case class WeaponFire(Timestamp: Option[Either[String, Double]] = None,
+  case class WeaponFire(Timestamp: Option[Either[String, Long]] = None,
                         AttackerId: Option[String] = None,
                         TargetId: Option[String] = None,
                         MunitionType: Option[Array[Int]] = None,
@@ -1103,7 +1105,7 @@ package object WebLvc {
   /**
     * Munition Detonation interaction message
     */
-  case class MunitionDetonation(Timestamp: Option[Either[String, Double]] = None,
+  case class MunitionDetonation(Timestamp: Option[Either[String, Long]] = None,
                                 AttackerId: Option[String] = None,
                                 TargetId: Option[String] = None,
                                 MunitionType: Option[Array[Int]] = None,
@@ -1148,7 +1150,7 @@ package object WebLvc {
     * Start Resume interaction message. directs one or more simulators to start or resume simulating,
     * or start or resume simulation of a specific entity.
     */
-  case class StartResume(Timestamp: Option[Either[String, Double]] = None,
+  case class StartResume(Timestamp: Option[Either[String, Long]] = None,
                          ReceivingEntity: Array[Int],
                          RequestIdentifier: Int,
                          RealWorldTime: Double,
@@ -1185,7 +1187,7 @@ package object WebLvc {
   /**
     * directs one or more simulators to stop simulating, or stop simulation of a specific entity.
     */
-  case class StopFreeze(Timestamp: Option[Either[String, Double]] = None,
+  case class StopFreeze(Timestamp: Option[Either[String, Long]] = None,
                         ReceivingEntity: Array[Int],
                         OriginatingEntity: Option[Array[Int]] = None,
                         RealWorldTime: Option[Double] = None,
@@ -1224,7 +1226,7 @@ package object WebLvc {
   /**
     * represents the wireless transmission and reception of audio or digital data via electromagnetic waves.
     */
-  case class RadioSignal(Timestamp: Option[Either[String, Double]] = None,
+  case class RadioSignal(Timestamp: Option[Either[String, Long]] = None,
                          RadioIdentifier: Option[String] = None,
                          EncodingClass: Option[Int] = None,
                          EncodingType: Option[Int] = None,
@@ -1276,7 +1278,7 @@ package object WebLvc {
     */
   case class SubscribeObject(ObjectType: String,
                              Filters: Option[Either[Filter, FilterExpression]] = None)
-                             extends WeblvcMsg {
+    extends WeblvcMsg {
     val MessageKind = SubscribeObject.MessageKind
   }
 
@@ -1347,8 +1349,8 @@ package object WebLvc {
     * @param Filters
     */
   case class SubscribeInteraction(InteractionType: String,
-                                  Timestamp: Option[Either[String, Double]] = None,
-                                  Filters: Option[AttributesMap] = None) extends WeblvcMsg {
+                                  Timestamp: Option[Either[String, Long]] = None,
+                                  Filters: Option[Either[Filter, FilterExpression]] = None) extends WeblvcMsg {
 
     val MessageKind = SubscribeInteraction.MessageKind
   }
@@ -1356,23 +1358,31 @@ package object WebLvc {
   object SubscribeInteraction {
     val MessageKind = "SubscribeInteraction"
 
-    val fmtx = Json.format[SubscribeInteraction]
-
     val theReads = new Reads[SubscribeInteraction] {
       def reads(js: JsValue): JsResult[SubscribeInteraction] = {
         if ((js \ "MessageKind").as[String] == MessageKind) {
-          fmtx.reads(js)
+          JsSuccess(new SubscribeInteraction((js \ "InteractionType").as[String],
+            (js \ "Timestamp").asOpt[Either[String, Long]],
+            Json.fromJson[Either[Filter, FilterExpression]](js).asOpt))
         } else {
-          JsError(s"Error reading message: $js")
+          JsError(s"Error reading SubscribeInteraction message: $js")
         }
       }
     }
 
     val theWrites = new Writes[SubscribeInteraction] {
-      def writes(c: SubscribeInteraction) = Json.obj("MessageKind" -> MessageKind) ++ fmtx.writes(c)
+      def writes(p: SubscribeInteraction) = {
+        val base = Json.obj("MessageKind" -> JsString(p.MessageKind),
+          "InteractionType" -> JsString(p.InteractionType),
+          "Timestamp" -> Json.toJson(p.Timestamp))
+        p.Filters match {
+          case Some(f) => base ++ Json.toJson(f).asInstanceOf[JsObject]
+          case None => base
+        }
+      }
     }
 
-    implicit val fmt = Format(theReads, theWrites)
+    implicit val fmt: Format[SubscribeInteraction] = Format(theReads, theWrites)
   }
 
   /**

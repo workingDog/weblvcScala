@@ -23,7 +23,7 @@ object WeblvcImplicits {
 
   implicit def BoolToBoolOp(value: Boolean): Option[Boolean] = Option(value)
 
-  implicit def EitherToOp(value: Either[String, Double]): Option[Either[String, Double]] = Option(value)
+  implicit def EitherToOp(value: Either[String, Long]): Option[Either[String, Long]] = Option(value)
 
   implicit def CoordinatesToOp(value: Coordinates): Option[Coordinates] = Option(value)
 
@@ -39,9 +39,9 @@ object WeblvcImplicits {
 
   // ------------------X to Option[Either[x,y]]--------------------------------------------------
 
-  implicit def StringToEither(value: String): Option[Either[String, Double]] = Option(Left(value))
+  implicit def StringToEither(value: String): Option[Either[String, Long]] = Option(Left(value))
 
-  implicit def DoubleToEither(value: Double): Option[Either[String, Double]] = Option(Right(value))
+  implicit def LongToEither(value: Long): Option[Either[String, Long]] = Option(Right(value))
 
   // ------------------X to WeblvcMsg -----------------------------------------------------------
 
