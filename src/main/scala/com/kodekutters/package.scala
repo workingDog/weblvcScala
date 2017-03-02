@@ -13,7 +13,7 @@ import scala.language.postfixOps
 /**
   * WebLVC standard object model protocol
   *
-  * ref:  "WebLVC Draft Protocol Specification Version 0.5 of 22 July 2016"
+  * ref: "WebLVC Draft Protocol Specification Version 0.5 of 22 July 2016"
   * see SISO: https://www.sisostds.org/DigitalLibrary.aspx?EntryId=45483
   *
   * Author: R. Wathelet
@@ -557,8 +557,6 @@ package object WebLvc {
     val theReads = new Reads[AttributeUpdate] {
       def reads(js: JsValue): JsResult[AttributeUpdate] = {
         if ((js \ "MessageKind").as[String] == MessageKind) {
-          println("\n----------in AttributeUpdate theReads")
-          omitList.foreach(println(_))
           JsSuccess(new AttributeUpdate(
             (js \ "ObjectType").as[String],
             (js \ "ObjectName").as[String],
@@ -571,11 +569,14 @@ package object WebLvc {
       }
     }
 
-    // todo options
     val theWrites = new Writes[AttributeUpdate] {
-      def writes(c: AttributeUpdate) = {
-        Json.obj("MessageKind" -> MessageKind, "ObjectType" -> c.ObjectType,
-          "ObjectName" -> c.ObjectName, "Timestamp" -> c.Timestamp)
+      def writes(p: AttributeUpdate): JsValue = {
+        val base = Json.obj("MessageKind" -> p.MessageKind, "ObjectType" -> p.ObjectType, "ObjectName" -> p.ObjectName)
+        val theList = JsObject(List(p.Timestamp.map("Timestamp" -> Json.toJson(_))).flatten)
+        p.attributes match {
+          case Some(att) => base ++ theList ++ Json.toJson[AttributesMap](att).asInstanceOf[JsObject]
+          case None => base ++ theList
+        }
       }
     }
 
@@ -624,20 +625,19 @@ package object WebLvc {
     }
 
     val theWrites = new Writes[PhysicalEntity] {
-      def writes(p: PhysicalEntity) = {
-        val envx = Json.obj(
-          "MessageKind" -> JsString(p.MessageKind),
-          "ObjectType" -> JsString(p.ObjectType),
-          "ObjectName" -> JsString(p.ObjectName),
-          "Timestamp" -> Json.toJson(p.Timestamp),
-          "EntityType" -> Json.toJson(p.EntityType),
-          "EntityIdentifier" -> Json.toJson(p.EntityIdentifier),
-          "Coordinates" -> Json.toJson(p.Coordinates),
-          "ForceIdentifier" -> Json.toJson(p.ForceIdentifier),
-          "Marking" -> Json.toJson(p.Marking))
+      def writes(p: PhysicalEntity): JsValue = {
+        val base = Json.obj("MessageKind" -> p.MessageKind, "ObjectType" -> p.ObjectType, "ObjectName" -> p.ObjectName)
+        val theList = JsObject(List(
+          p.Timestamp.map("Timestamp" -> Json.toJson(_)),
+          p.EntityType.map("EntityType" -> Json.toJson(_)),
+          p.EntityIdentifier.map("EntityIdentifier" -> Json.toJson(_)),
+          p.Coordinates.map("Coordinates" -> Json.toJson(_)),
+          p.ForceIdentifier.map("ForceIdentifier" -> JsNumber(_)),
+          p.Marking.map("Marking" -> JsString(_))).flatten
+        )
         p.attributes match {
-          case Some(att) => envx ++ Json.toJson[AttributesMap](att).asInstanceOf[JsObject]
-          case None => envx
+          case Some(att) => base ++ theList ++ Json.toJson[AttributesMap](att).asInstanceOf[JsObject]
+          case None => base ++ theList
         }
       }
     }
@@ -718,31 +718,27 @@ package object WebLvc {
     }
 
     val theWrites = new Writes[AggregateEntity] {
-      def writes(p: AggregateEntity) = {
-        val envx = Json.obj(
-          "MessageKind" -> JsString(p.MessageKind),
-          "ObjectType" -> JsString(p.ObjectType),
-          "ObjectName" -> JsString(p.ObjectName),
-          "Timestamp" -> Json.toJson(p.Timestamp),
-          "EntityType" -> Json.toJson(p.EntityType),
-          "EntityIdentifier" -> Json.toJson(p.EntityIdentifier),
-          "Coordinates" -> Json.toJson(p.Coordinates),
-          "ForceIdentifier" -> Json.toJson(p.ForceIdentifier),
-          "AggregateState" -> Json.toJson(p.AggregateState),
-          "Formation" -> Json.toJson(p.Formation),
-          "Dimensions" -> Json.toJson(p.Dimensions),
-          "Subordinates" -> Json.toJson(p.Subordinates),
-          "AggregateSubordinates" -> Json.toJson(p.AggregateSubordinates),
-          "SilentEntities" -> Json.toJson(p.SilentEntities),
-          "SilentAggregates" -> Json.toJson(p.SilentAggregates),
-          "SilentEntitiesDamageState" -> Json.toJson(p.SilentEntitiesDamageState),
-          "ForceIdentifier" -> Json.toJson(p.ForceIdentifier),
-          "ForceIdentifier" -> Json.toJson(p.ForceIdentifier),
-          "ForceIdentifier" -> Json.toJson(p.ForceIdentifier),
-          "Marking" -> Json.toJson(p.Marking))
+      def writes(p: AggregateEntity): JsValue = {
+        val base = Json.obj("MessageKind" -> p.MessageKind, "ObjectType" -> p.ObjectType, "ObjectName" -> p.ObjectName)
+        val theList = JsObject(List(
+          p.Timestamp.map("Timestamp" -> Json.toJson(_)),
+          p.EntityType.map("EntityType" -> Json.toJson(_)),
+          p.EntityIdentifier.map("EntityIdentifier" -> Json.toJson(_)),
+          p.Coordinates.map("Coordinates" -> Json.toJson(_)),
+          p.ForceIdentifier.map("ForceIdentifier" -> JsNumber(_)),
+          p.Marking.map("Marking" -> JsString(_)),
+          p.AggregateState.map("AggregateState" -> JsNumber(_)),
+          p.Formation.map("Formation" -> JsNumber(_)),
+          p.Dimensions.map("Dimensions" -> Json.toJson(_)),
+          p.Subordinates.map("Subordinates" -> Json.toJson(_)),
+          p.AggregateSubordinates.map("AggregateSubordinates" -> Json.toJson(_)),
+          p.SilentEntities.map("SilentEntities" -> Json.toJson(_)),
+          p.SilentAggregates.map("SilentAggregates" -> Json.toJson(_)),
+          p.SilentEntitiesDamageState.map("SilentEntitiesDamageState" -> Json.toJson(_))).flatten)
+
         p.attributes match {
-          case Some(att) => envx ++ Json.toJson[AttributesMap](att).asInstanceOf[JsObject]
-          case None => envx
+          case Some(att) => base ++ theList ++ Json.toJson[AttributesMap](att).asInstanceOf[JsObject]
+          case None => base ++ theList
         }
       }
     }
@@ -811,21 +807,20 @@ package object WebLvc {
     }
 
     val theWrites = new Writes[EnvironmentalEntity] {
-      def writes(p: EnvironmentalEntity) = {
-        val envx = Json.obj(
-          "MessageKind" -> JsString(p.MessageKind),
-          "ObjectType" -> JsString(p.ObjectType),
-          "ObjectName" -> JsString(p.ObjectName),
-          "Timestamp" -> Json.toJson(p.Timestamp),
-          "Type" -> Json.toJson(p.`Type`),
-          "ProcessIdentifier" -> Json.toJson(p.ProcessIdentifier),
-          "ModelType" -> Json.toJson(p.ModelType),
-          "EnvironmentProcessActive" -> Json.toJson(p.EnvironmentProcessActive),
-          "SequenceNumber" -> Json.toJson(p.SequenceNumber),
-          "GeometryRecords" -> Json.toJson(p.GeometryRecords))
+      def writes(p: EnvironmentalEntity): JsValue = {
+        val base = Json.obj("MessageKind" -> p.MessageKind, "ObjectType" -> p.ObjectType, "ObjectName" -> p.ObjectName)
+        val theList = JsObject(List(
+          p.Timestamp.map("Timestamp" -> Json.toJson(_)),
+          p.`Type`.map("Type" -> Json.toJson(_)),
+          p.ProcessIdentifier.map("ProcessIdentifier" -> Json.toJson(_)),
+          p.ModelType.map("ModelType" -> JsNumber(_)),
+          p.EnvironmentProcessActive.map("EnvironmentProcessActive" -> JsBoolean(_)),
+          p.SequenceNumber.map("SequenceNumber" -> JsNumber(_)),
+          p.GeometryRecords.map("GeometryRecords" -> Json.toJson(_))).flatten)
+
         p.attributes match {
-          case Some(att) => envx ++ Json.toJson[AttributesMap](att).asInstanceOf[JsObject]
-          case None => envx
+          case Some(att) => base ++ theList ++ Json.toJson[AttributesMap](att).asInstanceOf[JsObject]
+          case None => base ++ theList
         }
       }
     }
@@ -927,35 +922,34 @@ package object WebLvc {
     }
 
     val theWrites = new Writes[RadioTransmitter] {
-      def writes(p: RadioTransmitter) = {
-        val envx = Json.obj(
-          "MessageKind" -> JsString(p.MessageKind),
-          "ObjectType" -> JsString(p.ObjectType),
-          "ObjectName" -> JsString(p.ObjectName),
-          "Timestamp" -> Json.toJson(p.Timestamp),
-          "EntityIdentifier" -> Json.toJson(p.EntityIdentifier),
-          "HostObjectName" -> Json.toJson(p.HostObjectName),
-          "RadioIndex" -> Json.toJson(p.RadioIndex),
-          "RadioEntityType" -> Json.toJson(p.RadioEntityType),
-          "TransmitState" -> Json.toJson(p.TransmitState),
-          "InputSource" -> Json.toJson(p.InputSource),
-          "WorldAntennaLocation" -> Json.toJson(p.WorldAntennaLocation),
-          "RelativeAntennaLocation" -> Json.toJson(p.RelativeAntennaLocation),
-          "AntennaPatternType" -> Json.toJson(p.AntennaPatternType),
-          "Frequency" -> Json.toJson(p.Frequency),
-          "TransmitBandwidth" -> Json.toJson(p.TransmitBandwidth),
-          "Power" -> Json.toJson(p.Power),
-          "ModulationType" -> Json.toJson(p.ModulationType),
-          "CryptoMode" -> Json.toJson(p.CryptoMode),
-          "CryptoSystem" -> Json.toJson(p.CryptoSystem),
-          "CryptoKey" -> Json.toJson(p.CryptoKey),
-          "AntennaPatternParameters" -> Json.toJson(p.AntennaPatternParameters),
-          "FrequencyHopInUse" -> Json.toJson(p.FrequencyHopInUse),
-          "PseudoNoiseInUse" -> Json.toJson(p.PseudoNoiseInUse),
-          "TimeHopInUse" -> Json.toJson(p.TimeHopInUse))
+      def writes(p: RadioTransmitter): JsValue = {
+        val base = Json.obj("MessageKind" -> p.MessageKind, "ObjectType" -> p.ObjectType, "ObjectName" -> p.ObjectName)
+        val theList = JsObject(List(
+          p.Timestamp.map("Timestamp" -> Json.toJson(_)),
+          p.EntityIdentifier.map("EntityIdentifier" -> Json.toJson(_)),
+          p.HostObjectName.map("HostObjectName" -> JsString(_)),
+          p.RadioIndex.map("RadioIndex" -> JsNumber(_)),
+          p.RadioEntityType.map("RadioEntityType" -> Json.toJson(_)),
+          p.TransmitState.map("TransmitState" -> JsNumber(_)),
+          p.InputSource.map("InputSource" -> Json.toJson(_)),
+          p.WorldAntennaLocation.map("WorldAntennaLocation" -> Json.toJson(_)),
+          p.RelativeAntennaLocation.map("RelativeAntennaLocation" -> Json.toJson(_)),
+          p.AntennaPatternType.map("AntennaPatternType" -> JsNumber(_)),
+          p.Frequency.map("Frequency" -> JsNumber(_)),
+          p.TransmitBandwidth.map("TransmitBandwidth" -> JsNumber(_)),
+          p.Power.map("Power" -> JsNumber(_)),
+          p.ModulationType.map("ModulationType" -> Json.toJson(_)),
+          p.CryptoMode.map("CryptoMode" -> JsNumber(_)),
+          p.CryptoSystem.map("CryptoSystem" -> JsNumber(_)),
+          p.CryptoKey.map("CryptoKey" -> JsNumber(_)),
+          p.AntennaPatternParameters.map("AntennaPatternParameters" -> Json.toJson(_)),
+          p.FrequencyHopInUse.map("FrequencyHopInUse" -> JsBoolean(_)),
+          p.PseudoNoiseInUse.map("PseudoNoiseInUse" -> JsBoolean(_)),
+          p.TimeHopInUse.map("TimeHopInUse" -> JsBoolean(_))).flatten)
+
         p.attributes match {
-          case Some(att) => envx ++ Json.toJson[AttributesMap](att).asInstanceOf[JsObject]
-          case None => envx
+          case Some(att) => base ++ theList ++ Json.toJson[AttributesMap](att).asInstanceOf[JsObject]
+          case None => base ++ theList
         }
       }
     }
@@ -1048,8 +1042,8 @@ package object WebLvc {
     val theWrites = new Writes[Interaction] {
       def writes(p: Interaction) = {
         p.attributes match {
-          case Some(att) => Json.obj("MessageKind" -> JsString(MessageKind)) ++ Json.toJson(att).asInstanceOf[JsObject] ++ pWrites.writes(p).asInstanceOf[JsObject]
-          case None => Json.obj("MessageKind" -> JsString(MessageKind))
+          case Some(att) => Json.obj("MessageKind" -> MessageKind) ++ Json.toJson(att).asInstanceOf[JsObject] ++ pWrites.writes(p).asInstanceOf[JsObject]
+          case None => Json.obj("MessageKind" -> MessageKind) ++ pWrites.writes(p).asInstanceOf[JsObject]
         }
       }
     }
@@ -1298,7 +1292,7 @@ package object WebLvc {
 
     val theWrites = new Writes[SubscribeObject] {
       def writes(p: SubscribeObject) = {
-        val base = Json.obj("MessageKind" -> JsString(p.MessageKind), "ObjectType" -> JsString(p.ObjectType))
+        val base = Json.obj("MessageKind" -> p.MessageKind, "ObjectType" -> p.ObjectType)
         p.Filters match {
           case Some(f) => base ++ Json.toJson(f).asInstanceOf[JsObject]
           case None => base
@@ -1372,9 +1366,7 @@ package object WebLvc {
 
     val theWrites = new Writes[SubscribeInteraction] {
       def writes(p: SubscribeInteraction) = {
-        val base = Json.obj("MessageKind" -> JsString(p.MessageKind),
-          "InteractionType" -> JsString(p.InteractionType),
-          "Timestamp" -> Json.toJson(p.Timestamp))
+        val base = Json.obj("MessageKind" -> p.MessageKind, "InteractionType" -> p.InteractionType, "Timestamp" -> p.Timestamp)
         p.Filters match {
           case Some(f) => base ++ Json.toJson(f).asInstanceOf[JsObject]
           case None => base
@@ -1450,7 +1442,6 @@ package object WebLvc {
     implicit val fmt = Format(theReads, theWrites)
   }
 
-  // todo the Array[StatusLog] should be a sorted list ordered by index number
   /**
     * the server response to the client StatusLogRequest
     *

@@ -26,29 +26,39 @@ object WeblvcTest {
 
   def main(args: Array[String]): Unit = {
 
-    //    testConnect()
-    //    testConfigure()
-    //    testPoly()
-    //    testAggr()
-    //    testPhys()
-    //    testEnv()
-    //    testRadio()
-    //    WeaponFire()
-    //    testFilters()
+        testConnect()
+        testConfigure()
+        testPoly()
+        testAggr()
+        testPhys()
+        testEnv()
+        testRadio()
+        WeaponFire()
+        testFilters()
+        testConnectMinMax()
 
-    //    testConnectMinMax()
+    testFilterX()
 
-    //    testFilterX()
+    // testTime()
 
-    testTime()
+    //    testStream()
   }
 
   import com.kodekutters.WebLvc.{AttributeUpdateMsg, CoordinatesGeod, PhysicalEntity}
 
-def testTime() = {
 
-  val jsPhys =
-    """{
+  def testStream() = {
+
+    val logNdx = Stream.from(0).iterator
+
+    for (i <- 0 to 5) println("i: " + i + " logNdx next: " + logNdx.next())
+
+  }
+
+  def testTime() = {
+
+    val jsPhys =
+      """{
           "MessageKind" : "AttributeUpdate",
           "ObjectType" : "WebLVC:PhysicalEntity",
           "ObjectName" : "obj-name",
@@ -68,44 +78,44 @@ def testTime() = {
           "some_attributesx" : "strawberriesx"
           }""".stripMargin
 
-  val prs = Json.parse(jsPhys)
-  val phys1 = Json.fromJson[WeblvcMsg](prs).asOpt
-  println("phys1: "+phys1)
-  phys1 match {
-    case None => println("no phys")
-    case Some(phys) => println("phys: " + Json.prettyPrint(Json.toJson[WeblvcMsg](phys)))
-  }
-  println()
+    val prs = Json.parse(jsPhys)
+    val phys1 = Json.fromJson[WeblvcMsg](prs).asOpt
+    println("phys1: " + phys1)
+    phys1 match {
+      case None => println("no phys")
+      case Some(phys) => println("phys: " + Json.prettyPrint(Json.toJson[WeblvcMsg](phys)))
+    }
+    println()
 
 
-  def DoubleTohex(v: Double): String = {
-    f"${v.toInt}%X"
-  }
+    def DoubleTohex(v: Double): String = {
+      f"${v.toInt}%X"
+    }
 
-  val d = 12345.6
-  val h = DoubleTohex(d)
-  println(" double: "+ d + " hex: "+ h + " back d: "+ Integer.parseInt(h, 16))
-
-
-  val lx = 123456789L
-  val hlx = f"$lx%X"
-  println(" long: "+ lx + " hex: "+ hlx + " back lx: "+ Integer.parseInt(hlx, 16))
+    val d = 12345.6
+    val h = DoubleTohex(d)
+    println(" double: " + d + " hex: " + h + " back d: " + Integer.parseInt(h, 16))
 
 
-  val gTime = LocalDateTime.now().toString
-  println(" gTime: "+ gTime+" "+LocalDateTime.now())
+    val lx = 123456789L
+    val hlx = f"$lx%X"
+    println(" long: " + lx + " hex: " + hlx + " back lx: " + Integer.parseInt(hlx, 16))
 
-  val statusList = new ArrayBuffer[String]()
-  val ndxx = statusList.size
-  println("ndxx: "+ ndxx)
 
-  for(i <- 0 to 5) {
-    statusList += "zz"+statusList.size
-  //  val ndx = statusList.size
-  //  println("ndx: "+ ndx)
-  }
+    val gTime = LocalDateTime.now().toString
+    println(" gTime: " + gTime + " " + LocalDateTime.now())
 
-  statusList.foreach(println(_))
+    val statusList = new ArrayBuffer[String]()
+    val ndxx = statusList.size
+    println("ndxx: " + ndxx)
+
+    for (i <- 0 to 5) {
+      statusList += "zz" + statusList.size
+      //  val ndx = statusList.size
+      //  println("ndx: "+ ndx)
+    }
+
+    statusList.foreach(println(_))
 
   }
 
@@ -162,7 +172,7 @@ def testTime() = {
          	 "all": { "Marking" : [ "TankABC" ] }
            },
         	{
-        	"all": { "Dimensions" : [ {"min" : [0,0,0], "max" : [10,10,10]} ] }
+        	"any": { "Dimensions" : [ {"min" : [0,0,0], "max" : [10,10,10]} ] }
           }
         ]
         }""".stripMargin
@@ -190,17 +200,23 @@ def testTime() = {
         ]
         }""".stripMargin
 
-    val js =
+    val js4 =
       """{"MessageKind":"SubscribeObject","ObjectType":"WebLVC:PhysicalEntity",
         "all" : {
            "Coordinates" : [ {"all": { "DeadReckoningAlgorithm": [ 2, 4 ] } } ]
          	} }""".stripMargin
 
-    val prs = Json.parse(js)
+    def doit(js: String, name: String) = {
+      val prs = Json.parse(js)
+      val obj = Json.fromJson[WeblvcMsg](prs).asOpt
+      println(name + " fromJson: " + obj)
+      println(name + " toJson: " + Json.toJson(obj) + "\n")
+    }
 
-    val obj = Json.fromJson[WeblvcMsg](prs).asOpt
-    println("\nobj fromJson: " + obj)
-    println("\nobj toJson: " + Json.toJson(obj))
+    doit(js1, "js1")
+    doit(js2, "js2")
+    doit(js3, "js3")
+    doit(js4, "js4")
 
   }
 
@@ -392,12 +408,15 @@ def testTime() = {
 
     obj match {
       case None => println("no AggregateEntity")
-      case Some(aggr) => println("aggr: " + Json.prettyPrint(Json.toJson[WeblvcMsg](aggr)))
+      case Some(aggr) =>
+        println("aggr: " + Json.toJson[WeblvcMsg](aggr))
+        println("aggr pretty: " + Json.prettyPrint(Json.toJson[WeblvcMsg](aggr)))
     }
     println()
 
     val aggr = new AggregateEntity(ObjectName = "frank", Timestamp = "atime")
-    println("aggr2: " + Json.prettyPrint(Json.toJson[WeblvcMsg](aggr)))
+    println("aggr2: " + Json.toJson[WeblvcMsg](aggr))
+    println("aggr2 pretty: " + Json.prettyPrint(Json.toJson[WeblvcMsg](aggr)))
     println()
   }
 
