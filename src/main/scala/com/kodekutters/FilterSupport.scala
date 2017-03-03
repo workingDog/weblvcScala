@@ -11,11 +11,12 @@ import play.api.libs.json._
 import scala.language.implicitConversions
 import scala.language.postfixOps
 
-
+// todo All this must be redone
 /**
   * the filters.
   *
-  * due to type erasure when using generic Arrays this turned into this ugly code
+  * due to type erasure when using generic Arrays this turned into this mad and ugly code.
+  *
   */
 object FilterSupport {
 
@@ -88,7 +89,7 @@ object FilterSupport {
       def reads(json: JsValue): JsResult[StringArrayFilter] = {
         json.asOpt[Array[String]] match {
           case Some(x) => JsSuccess(new StringArrayFilter(x))
-          case None => JsError("could not read StringFilter: " + json)
+          case None => JsError("could not read StringArrayFilter: " + json)
         }
       }
 
@@ -103,7 +104,7 @@ object FilterSupport {
       def reads(json: JsValue): JsResult[IntArrayFilter] =
         json.asOpt[Array[Int]] match {
           case Some(x) => JsSuccess(new IntArrayFilter(x))
-          case None => JsError("could not read IntFilter: " + json)
+          case None => JsError("could not read IntArrayFilter: " + json)
         }
 
       def writes(f: IntArrayFilter) = Json.toJson(f.value)
@@ -117,7 +118,7 @@ object FilterSupport {
       def reads(json: JsValue): JsResult[DoubleArrayFilter] = {
         json.asOpt[Array[Double]] match {
           case Some(x) => JsSuccess(new DoubleArrayFilter(x))
-          case None => JsError("could not read DoubleFilter: " + json)
+          case None => JsError("could not read DoubleArrayFilter: " + json)
         }
       }
 
@@ -132,7 +133,7 @@ object FilterSupport {
       def reads(json: JsValue): JsResult[BooleanArrayFilter] = {
         json.asOpt[Array[Boolean]] match {
           case Some(x) => JsSuccess(new BooleanArrayFilter(x))
-          case None => JsError("could not read BooleanFilter: " + json)
+          case None => JsError("could not read BooleanArrayFilter: " + json)
         }
       }
 

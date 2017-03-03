@@ -26,32 +26,27 @@ object WeblvcTest {
 
   def main(args: Array[String]): Unit = {
 
-        testConnect()
-        testConfigure()
-        testPoly()
-        testAggr()
-        testPhys()
-        testEnv()
-        testRadio()
-        WeaponFire()
-        testFilters()
-        testConnectMinMax()
+//        testConnect()
+//        testConfigure()
+//        testPoly()
+//        testAggr()
+//        testPhys()
+//        testEnv()
+//        testRadio()
+//        WeaponFire()
+//        testConnectMinMax()
 
-    testFilterX()
+    testFilter()
 
     // testTime()
 
-    //    testStream()
+    //    testThis()
   }
 
   import com.kodekutters.WebLvc.{AttributeUpdateMsg, CoordinatesGeod, PhysicalEntity}
 
+  def testThis() = {
 
-  def testStream() = {
-
-    val logNdx = Stream.from(0).iterator
-
-    for (i <- 0 to 5) println("i: " + i + " logNdx next: " + logNdx.next())
 
   }
 
@@ -162,7 +157,7 @@ object WeblvcTest {
     println("after - " + theMsg)
   }
 
-  def testFilterX() = {
+  def testFilter() = {
     val js1 =
       """{
         "MessageKind" : "SubscribeObject",
@@ -206,10 +201,48 @@ object WeblvcTest {
            "Coordinates" : [ {"all": { "DeadReckoningAlgorithm": [ 2, 4 ] } } ]
          	} }""".stripMargin
 
+    val js5 =
+      """{"MessageKind":"SubscribeObject","ObjectType":"WebLVC:PhysicalEntity",
+         "all": { "Marking" : [ {"min" : "TankA", "max" : "TankZ"} ] }
+         }""".stripMargin
+
+    val js6 =
+      """{"MessageKind":"SubscribeObject","ObjectType":"WebLVC:PhysicalEntity",
+         "all": {
+  	"Marking" : [
+       	             {"min" : "TankA", "max" : "TankZ"},
+             	       {"min" : "PlaneA", "max" : "PlaneD"}
+  	            ] }
+         }""".stripMargin
+
+    // this does not work <-----------------
+    val js7 =
+      """{"MessageKind":"SubscribeObject","ObjectType":"WebLVC:PhysicalEntity",
+         "all": {
+  	"Marking" : [
+       	             "TankA",
+             	       {"min" : "PlaneA", "max" : "PlaneD"}
+  	            ] }
+         }""".stripMargin
+
+    val js8 =
+      """{
+        "MessageKind" : "SubscribeObject",
+        "ObjectType" : "WebLVC:PhysicalEntity",
+        "or": [
+         	{
+         	 "all": { "Marking" : [ "TankABC" ] }
+           },
+        	{
+        	"all": { "Dimensions" : [ {"min" : [0,0,0], "max" : [10,10,10]} ] }
+          }
+        ]
+        }""".stripMargin
+
     def doit(js: String, name: String) = {
       val prs = Json.parse(js)
       val obj = Json.fromJson[WeblvcMsg](prs).asOpt
-      println(name + " fromJson: " + obj)
+      println(name + " fromJson: " + obj + "\n")
       println(name + " toJson: " + Json.toJson(obj) + "\n")
     }
 
@@ -217,6 +250,10 @@ object WeblvcTest {
     doit(js2, "js2")
     doit(js3, "js3")
     doit(js4, "js4")
+    doit(js5, "js5")
+    doit(js6, "js6")
+    doit(js7, "js7")  // this does not work <-----------------
+    doit(js8, "js8")
 
   }
 
@@ -543,23 +580,6 @@ object WeblvcTest {
     println("test2: " + test2Js)
 
   }
-
-  def testFilters() = {
-    //    val dim = Array(1, 2, 3)
-    //    val attrib = ("Marking", Array("TankA", "TankB"))
-    //    val filter = new Filter("all", attrib)
-
-    //    val test3 = new AttributeUpdate("some-attribute-name", "objType", "zzzzzz", attrib)
-    //    val test3Js = Json.prettyPrint(Json.toJson[WeblvcMsg](test3))
-    //    println("test3: " + test3Js)
-    //    println()
-
-    //    val test5 = new SubscribeObject("WebLVC:PhysicalEntity", Some(filter))
-    //    val test5Js = Json.prettyPrint(Json.toJson[WeblvcMsg](test5))
-    //    println("test5: " + test5Js)
-
-  }
-
 
   def testEnv() = {
 
