@@ -565,7 +565,7 @@ object WeblvcTest {
 
     val poly = new Polygon(Seq(Seq(new LngLatAlt(1.2, 2.3, 12.3), new LngLatAlt(6.7, 4.5, 45.6))))
     val recon = new ServerDeadReckoning(true, 5.0, 7.0)
-    val test2 = new Configure(1, "latlong", recon, poly, new ObjectBounds("xxxx", 123))
+    val test2 = new Configure(1, "latlong", recon, poly, new ObjectBounds("xxxx", 123), None)
     val test2Js = Json.prettyPrint(Json.toJson[WeblvcMsg](test2))
     println("test2: " + test2Js)
 
@@ -575,7 +575,7 @@ object WeblvcTest {
   def testConfigure() = {
     val poly = new Polygon[LngLatAlt](Seq(Seq(new LngLatAlt(1.2, 2.3, 12.3), new LngLatAlt(6.7, 4.5, 45.6))))
     val recon = new ServerDeadReckoning(true, 5.0, 7.0)
-    val test2 = new Configure(1, defaultECEFCartesian, recon, poly, new ObjectBounds("xxxx", 123))
+    val test2 = new Configure(1, defaultECEFCartesian, recon, poly, new ObjectBounds("xxxx", 123), None)
     val test2Js = Json.prettyPrint(Json.toJson[WeblvcMsg](test2))
     println("test2: " + test2Js)
 

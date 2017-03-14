@@ -443,12 +443,12 @@ package object WebLvc {
     * @param WorldBounds               a GeoJSON geometry object of type “Polygon” or “MultiPolygon”
     * @param ObjectBounds              specifies the name of a WebLVC object, and a range around the object within which the client is interested in updates
     */
-  // todo add ---> attributes: Option[AttributesMap] = None
   case class Configure(TimestampFormat: Option[Int] = None,
                        CoordinateReferenceSystem: Option[String] = Some(defaultECEFCartesian),
                        ServerDeadReckoning: Option[ServerDeadReckoning] = None,
                        WorldBounds: Option[Either[Polygon[LngLatAlt], MultiPolygon[LngLatAlt]]] = None,
-                       ObjectBounds: Option[ObjectBounds] = None) extends WeblvcMsg {
+                       ObjectBounds: Option[ObjectBounds] = None,
+                       attributes: Option[AttributesMap] = None) extends WeblvcMsg {
 
     val MessageKind = Configure.MessageKind
 
@@ -456,49 +456,71 @@ package object WebLvc {
              CoordinateReferenceSystem: Option[String],
              ServerDeadReckoning: Option[ServerDeadReckoning],
              WorldBounds: Polygon[LngLatAlt],
-             ObjectBounds: Option[ObjectBounds]) = this(TimestampFormat, CoordinateReferenceSystem,
-      ServerDeadReckoning, Option(Left(WorldBounds)), ObjectBounds)
+             ObjectBounds: Option[ObjectBounds],
+             attributes: Option[AttributesMap]) = this(TimestampFormat, CoordinateReferenceSystem,
+      ServerDeadReckoning, Option(Left(WorldBounds)), ObjectBounds, attributes)
 
     def this(TimestampFormat: Option[Int],
              CoordinateReferenceSystem: Option[String],
              ServerDeadReckoning: Option[ServerDeadReckoning],
              WorldBounds: MultiPolygon[LngLatAlt],
-             ObjectBounds: Option[ObjectBounds]) = this(TimestampFormat, CoordinateReferenceSystem,
-      ServerDeadReckoning, Option(Right(WorldBounds)), ObjectBounds)
+             ObjectBounds: Option[ObjectBounds],
+             attributes: Option[AttributesMap]) = this(TimestampFormat, CoordinateReferenceSystem,
+      ServerDeadReckoning, Option(Right(WorldBounds)), ObjectBounds, attributes)
   }
 
   object Configure {
     val MessageKind = "Configure"
 
-    val fmtx = Json.format[Configure]
+    // the list of all field names but not "attributes"
+    private val omitList = (for (f <- Configure().getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
 
     val theReads = new Reads[Configure] {
       def reads(js: JsValue): JsResult[Configure] = {
         if ((js \ "MessageKind").as[String] == MessageKind) {
-          fmtx.reads(js)
-        } else {
+          JsSuccess(new Configure(
+            (js \ "TimestampFormat").asOpt[Int],
+            (js \ "CoordinateReferenceSystem").asOpt[String],
+            (js \ "ServerDeadReckoning").asOpt[ServerDeadReckoning],
+            (js \ "WorldBounds").asOpt[Either[Polygon[LngLatAlt], MultiPolygon[LngLatAlt]]],
+            (js \ "ObjectBounds").asOpt[ObjectBounds],
+            AttributesMap.readAttributes(js, omitList)))
+        }
+        else {
           JsError(s"Error reading message: $js")
         }
       }
     }
 
     val theWrites = new Writes[Configure] {
-      def writes(c: Configure) = Json.obj("MessageKind" -> MessageKind) ++ fmtx.writes(c)
+      def writes(p: Configure): JsValue = {
+        val base = Json.obj("MessageKind" -> p.MessageKind)
+        val theList = JsObject(List(
+          p.TimestampFormat.map("TimestampFormat" -> JsNumber(_)),
+          p.CoordinateReferenceSystem.map("CoordinateReferenceSystem" -> JsString(_)),
+          p.ServerDeadReckoning.map("ServerDeadReckoning" -> Json.toJson(_)),
+          p.WorldBounds.map("WorldBounds" -> Json.toJson(_)),
+          p.ObjectBounds.map("ObjectBounds" -> Json.toJson(_))).flatten)
+        p.attributes match {
+          case Some(att) => base ++ theList ++ Json.toJson[AttributesMap](att).asInstanceOf[JsObject]
+          case None => base ++ theList
+        }
+      }
     }
 
-    implicit val fmt = Format(theReads, theWrites)
+    implicit val fmt: Format[Configure] = Format(theReads, theWrites)
   }
 
   /**
     * server response to a client Configure request.
     * set of Booleans indicating success of the configurations.
     */
-  // todo add ---> attributes: Option[AttributesMap] = None
   case class ConfigureResponse(TimestampFormat: Option[Boolean] = None,
                                CoordinateReferenceSystem: Option[Boolean] = None,
                                ServerDeadReckoning: Option[Boolean] = None,
                                WorldBounds: Option[Boolean] = None,
-                               ObjectBounds: Option[Boolean] = None) extends WeblvcMsg {
+                               ObjectBounds: Option[Boolean] = None,
+                               attributes: Option[AttributesMap] = None) extends WeblvcMsg {
 
     val MessageKind = ConfigureResponse.MessageKind
   }
@@ -506,23 +528,43 @@ package object WebLvc {
   object ConfigureResponse {
     val MessageKind = "ConfigureResponse"
 
-    val fmtx = Json.format[ConfigureResponse]
+    // the list of all field names but not "attributes"
+    private val omitList = (for (f <- ConfigureResponse().getClass.getDeclaredFields) yield f.getName).toList.filterNot(_ == "attributes")
 
     val theReads = new Reads[ConfigureResponse] {
       def reads(js: JsValue): JsResult[ConfigureResponse] = {
         if ((js \ "MessageKind").as[String] == MessageKind) {
-          fmtx.reads(js)
-        } else {
+          JsSuccess(new ConfigureResponse(
+            (js \ "TimestampFormat").asOpt[Boolean],
+            (js \ "CoordinateReferenceSystem").asOpt[Boolean],
+            (js \ "ServerDeadReckoning").asOpt[Boolean],
+            (js \ "WorldBounds").asOpt[Boolean],
+            (js \ "ObjectBounds").asOpt[Boolean],
+            AttributesMap.readAttributes(js, omitList)))
+        }
+        else {
           JsError(s"Error reading message: $js")
         }
       }
     }
 
     val theWrites = new Writes[ConfigureResponse] {
-      def writes(c: ConfigureResponse) = Json.obj("MessageKind" -> MessageKind) ++ fmtx.writes(c)
+      def writes(p: ConfigureResponse): JsValue = {
+        val base = Json.obj("MessageKind" -> p.MessageKind)
+        val theList = JsObject(List(
+          p.TimestampFormat.map("TimestampFormat" -> JsBoolean(_)),
+          p.CoordinateReferenceSystem.map("CoordinateReferenceSystem" -> JsBoolean(_)),
+          p.ServerDeadReckoning.map("ServerDeadReckoning" -> JsBoolean(_)),
+          p.WorldBounds.map("WorldBounds" -> JsBoolean(_)),
+          p.ObjectBounds.map("ObjectBounds" -> JsBoolean(_))).flatten)
+        p.attributes match {
+          case Some(att) => base ++ theList ++ Json.toJson[AttributesMap](att).asInstanceOf[JsObject]
+          case None => base ++ theList
+        }
+      }
     }
 
-    implicit val fmt = Format(theReads, theWrites)
+    implicit val fmt: Format[ConfigureResponse] = Format(theReads, theWrites)
   }
 
   //------------------------------------------------------------------------------------
