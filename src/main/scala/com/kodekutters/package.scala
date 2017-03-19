@@ -381,7 +381,7 @@ package object WebLvc {
 
     val theReads = new Reads[Connect] {
       def reads(js: JsValue): JsResult[Connect] = {
-        if ((js \ "MessageKind").as[String] == MessageKind) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind)) {
           fmtx.reads(js)
         } else {
           JsError(s"Error reading message: $js")
@@ -416,7 +416,7 @@ package object WebLvc {
 
     val theReads = new Reads[ConnectResponse] {
       def reads(js: JsValue): JsResult[ConnectResponse] = {
-        if ((js \ "MessageKind").as[String] == MessageKind) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind)) {
           fmtx.reads(js)
         } else {
           JsError(s"Error reading message: $js")
@@ -477,7 +477,7 @@ package object WebLvc {
 
     val theReads = new Reads[Configure] {
       def reads(js: JsValue): JsResult[Configure] = {
-        if ((js \ "MessageKind").as[String] == MessageKind) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind)) {
           JsSuccess(new Configure(
             (js \ "TimestampFormat").asOpt[Int],
             (js \ "CoordinateReferenceSystem").asOpt[String],
@@ -533,7 +533,7 @@ package object WebLvc {
 
     val theReads = new Reads[ConfigureResponse] {
       def reads(js: JsValue): JsResult[ConfigureResponse] = {
-        if ((js \ "MessageKind").as[String] == MessageKind) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind)) {
           JsSuccess(new ConfigureResponse(
             (js \ "TimestampFormat").asOpt[Boolean],
             (js \ "CoordinateReferenceSystem").asOpt[Boolean],
@@ -598,7 +598,7 @@ package object WebLvc {
 
     val theReads = new Reads[AttributeUpdate] {
       def reads(js: JsValue): JsResult[AttributeUpdate] = {
-        if ((js \ "MessageKind").as[String] == MessageKind) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind)) {
           JsSuccess(new AttributeUpdate(
             (js \ "ObjectType").as[String],
             (js \ "ObjectName").as[String],
@@ -650,7 +650,8 @@ package object WebLvc {
 
     val theReads = new Reads[PhysicalEntity] {
       def reads(js: JsValue): JsResult[PhysicalEntity] = {
-        if ((js \ "MessageKind").as[String] == MessageKind && (js \ "ObjectType").as[String] == ObjectType) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind) &&
+          (js \ "ObjectType").asOpt[String].contains(ObjectType)) {
           JsSuccess(new PhysicalEntity(
             (js \ "ObjectName").as[String],
             (js \ "Timestamp").asOpt[Either[String, Long]],
@@ -735,7 +736,8 @@ package object WebLvc {
 
     val theReads = new Reads[AggregateEntity] {
       def reads(js: JsValue): JsResult[AggregateEntity] = {
-        if ((js \ "MessageKind").as[String] == MessageKind && (js \ "ObjectType").as[String] == ObjectType) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind) &&
+          (js \ "ObjectType").asOpt[String].contains(ObjectType)) {
           JsSuccess(new AggregateEntity(
             (js \ "ObjectName").as[String],
             (js \ "Timestamp").asOpt[Either[String, Long]],
@@ -831,7 +833,8 @@ package object WebLvc {
 
     val theReads = new Reads[EnvironmentalEntity] {
       def reads(js: JsValue): JsResult[EnvironmentalEntity] = {
-        if ((js \ "MessageKind").as[String] == MessageKind && (js \ "ObjectType").as[String] == ObjectType) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind) &&
+          (js \ "ObjectType").asOpt[String].contains(ObjectType)) {
           JsSuccess(new EnvironmentalEntity(
             (js \ "ObjectName").as[String],
             (js \ "Timestamp").asOpt[Either[String, Long]],
@@ -932,7 +935,8 @@ package object WebLvc {
 
     val theReads = new Reads[RadioTransmitter] {
       def reads(js: JsValue): JsResult[RadioTransmitter] = {
-        if ((js \ "MessageKind").as[String] == MessageKind && (js \ "ObjectType").as[String] == ObjectType) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind) &&
+          (js \ "ObjectType").asOpt[String].contains(ObjectType)) {
           JsSuccess(new RadioTransmitter(
             (js \ "ObjectName").as[String],
             (js \ "Timestamp").asOpt[Either[String, Long]],
@@ -1023,7 +1027,7 @@ package object WebLvc {
 
     val theReads = new Reads[ObjectDeleted] {
       def reads(js: JsValue): JsResult[ObjectDeleted] = {
-        if ((js \ "MessageKind").as[String] == MessageKind) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind)) {
           fmtx.reads(js)
         } else {
           JsError(s"Error reading message: $js")
@@ -1065,7 +1069,7 @@ package object WebLvc {
 
     val theReads = new Reads[Interaction] {
       def reads(js: JsValue): JsResult[Interaction] = {
-        if ((js \ "MessageKind").as[String] == MessageKind) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind)) {
           JsSuccess(new Interaction(
             (js \ "InteractionType").as[String],
             (js \ "Timestamp").asOpt[Either[String, Long]],
@@ -1122,7 +1126,8 @@ package object WebLvc {
 
     val theReads = new Reads[WeaponFire] {
       def reads(js: JsValue): JsResult[WeaponFire] = {
-        if ((js \ "MessageKind").as[String] == MessageKind && (js \ "InteractionType").as[String] == InteractionType) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind) &&
+          (js \ "InteractionType").asOpt[String].contains(InteractionType)) {
           fmtx.reads(js)
         } else {
           JsError(s"Error reading message: $js")
@@ -1167,7 +1172,8 @@ package object WebLvc {
 
     val theReads = new Reads[MunitionDetonation] {
       def reads(js: JsValue): JsResult[MunitionDetonation] = {
-        if ((js \ "MessageKind").as[String] == MessageKind && (js \ "InteractionType").as[String] == InteractionType) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind) &&
+          (js \ "InteractionType").asOpt[String].contains(InteractionType)) {
           fmtx.reads(js)
         } else {
           JsError(s"Error reading message: $js")
@@ -1205,7 +1211,8 @@ package object WebLvc {
 
     val theReads = new Reads[StartResume] {
       def reads(js: JsValue): JsResult[StartResume] = {
-        if ((js \ "MessageKind").as[String] == MessageKind && (js \ "InteractionType").as[String] == InteractionType) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind) &&
+          (js \ "InteractionType").asOpt[String].contains(InteractionType)) {
           fmtx.reads(js)
         } else {
           JsError(s"Error reading message: $js")
@@ -1244,7 +1251,8 @@ package object WebLvc {
 
     val theReads = new Reads[StopFreeze] {
       def reads(js: JsValue): JsResult[StopFreeze] = {
-        if ((js \ "MessageKind").as[String] == MessageKind && (js \ "InteractionType").as[String] == InteractionType) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind) &&
+          (js \ "InteractionType").asOpt[String].contains(InteractionType)) {
           fmtx.reads(js)
         } else {
           JsError(s"Error reading message: $js")
@@ -1285,7 +1293,8 @@ package object WebLvc {
 
     val theReads = new Reads[RadioSignal] {
       def reads(js: JsValue): JsResult[RadioSignal] = {
-        if ((js \ "MessageKind").as[String] == MessageKind && (js \ "InteractionType").as[String] == InteractionType) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind) &&
+          (js \ "InteractionType").asOpt[String].contains(InteractionType)) {
           fmtx.reads(js)
         } else {
           JsError(s"Error reading message: $js")
@@ -1323,7 +1332,7 @@ package object WebLvc {
 
     val theReads = new Reads[SubscribeObject] {
       def reads(js: JsValue): JsResult[SubscribeObject] = {
-        if ((js \ "MessageKind").as[String] == MessageKind) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind)) {
           JsSuccess(new SubscribeObject((js \ "ObjectType").as[String],
             Json.fromJson[Either[Filter, FilterExpression]](js).asOpt))
         } else {
@@ -1362,7 +1371,7 @@ package object WebLvc {
 
     val theReads = new Reads[UnsubscribeObject] {
       def reads(js: JsValue): JsResult[UnsubscribeObject] = {
-        if ((js \ "MessageKind").as[String] == MessageKind) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind)) {
           fmtx.reads(js)
         } else {
           JsError(s"Error reading message: $js")
@@ -1396,7 +1405,7 @@ package object WebLvc {
 
     val theReads = new Reads[SubscribeInteraction] {
       def reads(js: JsValue): JsResult[SubscribeInteraction] = {
-        if ((js \ "MessageKind").as[String] == MessageKind) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind)) {
           JsSuccess(new SubscribeInteraction((js \ "InteractionType").as[String],
             (js \ "Timestamp").asOpt[Either[String, Long]],
             Json.fromJson[Either[Filter, FilterExpression]](js).asOpt))
@@ -1436,7 +1445,7 @@ package object WebLvc {
 
     val theReads = new Reads[UnsubscribeInteraction] {
       def reads(js: JsValue): JsResult[UnsubscribeInteraction] = {
-        if ((js \ "MessageKind").as[String] == MessageKind) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind)) {
           fmtx.reads(js)
         } else {
           JsError(s"Error reading message: $js")
@@ -1469,7 +1478,7 @@ package object WebLvc {
 
     val theReads = new Reads[StatusLogRequest] {
       def reads(js: JsValue): JsResult[StatusLogRequest] = {
-        if ((js \ "MessageKind").as[String] == MessageKind) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind)) {
           fmtx.reads(js)
         } else {
           JsError(s"Error reading message: $js")
@@ -1501,7 +1510,7 @@ package object WebLvc {
 
     val theReads = new Reads[StatusLogResponse] {
       def reads(js: JsValue): JsResult[StatusLogResponse] = {
-        if ((js \ "MessageKind").as[String] == MessageKind) {
+        if ((js \ "MessageKind").asOpt[String].contains(MessageKind)) {
           fmtx.reads(js)
         } else {
           JsError(s"Error reading message: $js")
@@ -1523,10 +1532,9 @@ package object WebLvc {
 
     val theReads = new Reads[InteractionMsg] {
       def reads(json: JsValue): JsResult[InteractionMsg] = {
-        val msgK = (json \ "MessageKind").as[String]
-        msgK match {
+        (json \ "MessageKind").asOpt[String].map({
           case "Interaction" =>
-            (json \ "InteractionType").as[String] match {
+            (json \ "InteractionType").asOpt[String].map({
               case `weaponFire` => WeaponFire.fmt.reads(json)
               case `munitionDetonation` => MunitionDetonation.fmt.reads(json)
               case `startResume` => StartResume.fmt.reads(json)
@@ -1534,10 +1542,10 @@ package object WebLvc {
               case `radioSignal` => RadioSignal.fmt.reads(json)
               // case `transferOwnership` => TransferOwnership.fmt.reads(json)     // todo
               case _ => Interaction.fmt.reads(json)
-            }
+            }).getOrElse(JsError("Error no InteractionType"))
 
-          case err => JsError(s"Error unknown InteractionMsg message kind: $err")
-        }
+          case err => JsError(s"Error unknown Interaction message kind: $err")
+        }).getOrElse(JsError("Error no MessageKind"))
       }
     }
 
@@ -1566,19 +1574,18 @@ package object WebLvc {
 
     val theReads = new Reads[AttributeUpdateMsg] {
       def reads(json: JsValue): JsResult[AttributeUpdateMsg] = {
-        val msgK = (json \ "MessageKind").as[String]
-        msgK match {
+        (json \ "MessageKind").asOpt[String].map({
           case "AttributeUpdate" =>
-            // specify on ObjectType
-            (json \ "ObjectType").as[String] match {
+            (json \ "ObjectType").asOpt[String].map({
               case `phyEntity` => PhysicalEntity.fmt.reads(json)
               case `aggEntity` => AggregateEntity.fmt.reads(json)
               case `envEntity` => EnvironmentalEntity.fmt.reads(json)
               case `radioTrans` => RadioTransmitter.fmt.reads(json)
               case _ => AttributeUpdate.fmt.reads(json)
-            }
-          case err => JsError(s"Error unknown AttributeUpdateMsg message kind: $err")
-        }
+            }).getOrElse(JsError("Error no ObjectType"))
+
+          case err => JsError(s"Error unknown AttributeUpdate message kind: $err")
+        }).getOrElse(JsError("Error no MessageKind"))
       }
     }
 
@@ -1605,8 +1612,7 @@ package object WebLvc {
 
     val theReads = new Reads[WeblvcMsg] {
       def reads(json: JsValue): JsResult[WeblvcMsg] = {
-        val msgK = (json \ "MessageKind").as[String]
-        msgK match {
+        (json \ "MessageKind").asOpt[String].map({
           case "Connect" => Connect.fmt.reads(json)
           case "ConnectResponse" => ConnectResponse.fmt.reads(json)
           case "Configure" => Configure.fmt.reads(json)
@@ -1621,7 +1627,7 @@ package object WebLvc {
           case "StatusLogResponse" => StatusLogResponse.fmt.reads(json)
           case "Interaction" => InteractionMsg.fmt.reads(json).asInstanceOf[JsResult[WeblvcMsg]]
           case err => JsError(s"Error unknown Weblvc message kind: $err")
-        }
+        }).getOrElse(JsError("Error no MessageKind"))
       }
     }
 
