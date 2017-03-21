@@ -1,4 +1,4 @@
-##WebLVC protocol in scala
+## WebLVC protocol in scala
 
  [1]: "WebLVC is an interoperability protocol that enables web-based applications 
  (typically JavaScript applications running in a web browser) to interoperate in 
