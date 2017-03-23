@@ -17,7 +17,7 @@
  
 ## References
  
-1) [WebLVC Protocol Specification](https://www.sisostds.org)
+1) [WebLVC Protocol Specification](https://www.sisostds.org/StandardsActivities/DevelopmentGroups/WebLVCPDG.aspx)
   
 2) [SISO](https://www.sisostds.org)
   
