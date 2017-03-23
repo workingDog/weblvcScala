@@ -164,9 +164,11 @@ package object WebLvc {
   }
 
   /**
-    * a generic (key,value) dictionary, with key = an attribute name, and value = the attribute value
+    * a generic (key,value) dictionary,
+    * with key = an attribute name, and
+    * value = the attribute JsValue
     */
-  case class AttributesMap(nodes: Map[String, Any])
+  case class AttributesMap(nodes: Map[String, JsValue])
 
   object AttributesMap {
 
@@ -175,64 +177,23 @@ package object WebLvc {
         case json: JsObject =>
           // get all fields of js, but not the fields in the omitList
           val fList = json.fields.filterNot(p => omitList.contains(p._1))
-          val theListMap = fList.collect {
-            case (key, JsString(value)) => key -> value
-            case (key, JsNumber(value)) => key -> value // BigDecimal <----- todo
-            case (key, JsBoolean(value)) => key -> value
-            case (key, JsArray(value)) => key -> value
-          }
-          if (theListMap.isEmpty) None else Some(new AttributesMap(theListMap.toMap))
+          if (fList.isEmpty) None else Some(new AttributesMap(fList.toMap))
 
-        case x => JsError(s"Could not read KeyValue: $x"); None
+        case x => JsError(s"Could not read AttributesMap: $x"); None
       }
     }
 
     val theReads = new Reads[AttributesMap] {
       def reads(json: JsValue): JsResult[AttributesMap] = {
         json match {
-          case js: JsObject =>
-            val theListMap = js.fields.collect {
-              case (key, JsString(value)) => key -> value
-              case (key, JsNumber(value)) => key -> value // BigDecimal ?<----- todo
-              case (key, JsBoolean(value)) => key -> value
-              case (key, JsArray(value)) => key -> value
-              case (key, JsObject(value)) => key -> value // <--- todo
-              // case (key, JsArray(JsObject(value))) => key -> value
-            }
-            JsSuccess(new AttributesMap(theListMap.toMap))
-
+          case js: JsObject => JsSuccess(new AttributesMap(js.fields.toMap))
           case x => JsError(s"Error in AttributesMap could not read KeyValue: $x")
         }
       }
     }
 
     val theWrites = new Writes[AttributesMap] {
-      def writes(keyval: AttributesMap): JsObject = {
-        val list = for ((k, v) <- keyval.nodes) yield {
-          v match {
-            case x: String => k -> JsString(x)
-            case x: Double => k -> JsNumber(x)
-            case x: Int => k -> JsNumber(x)
-            case x: Float => k -> JsNumber(x.toDouble)
-            case x: Long => k -> JsNumber(x)
-            case x: Boolean => k -> JsBoolean(x)
-            case x: BigDecimal => k -> JsNumber(x)
-            case x: Array[Int] => k -> JsArray(for (i <- x.toSeq) yield JsNumber(i))
-            case x: Array[Double] => k -> JsArray(for (i <- x.toSeq) yield JsNumber(i))
-            case x: Array[BigDecimal] => k -> JsArray(for (i <- x.toSeq) yield JsNumber(i))
-            case x: Array[String] => k -> JsArray(for (i <- x.toSeq) yield JsString(i))
-            case x: Array[Boolean] => k -> JsArray(for (i <- x.toSeq) yield JsBoolean(i))
-
-            //    case x: MinMaxRange[_] => k -> Json.toJson(x)
-            //    case x: Array[MinMaxRange[_]] => k -> JsArray(for (i <- x.toSeq) yield Json.toJson[MinMaxRange[_]](i))
-
-            // ------ todo
-            //  case x: Array[AttributesMap] => k -> JsArray(for (i <- x.toSeq) yield Json.toJson[AttributesMap](i))
-            case x => k -> JsNull //  <------ todo other types
-          }
-        }
-        JsObject(list)
-      }
+      def writes(keyval: AttributesMap): JsObject = JsObject(keyval.nodes)
     }
 
     implicit val fmt: Format[AttributesMap] = Format(theReads, theWrites)

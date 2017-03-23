@@ -26,15 +26,15 @@ object WeblvcTest {
 
   def main(args: Array[String]): Unit = {
 
-//        testConnect()
-//        testConfigure()
-//        testPoly()
-//        testAggr()
-//        testPhys()
-//        testEnv()
-//        testRadio()
-//        WeaponFire()
-//        testConnectMinMax()
+        testConnect()
+        testConfigure()
+        testPoly()
+        testAggr()
+        testPhys()
+        testEnv()
+        testRadio()
+        WeaponFire()
+        testConnectMinMax()
 
     testFilter()
 
@@ -322,7 +322,7 @@ object WeblvcTest {
 
     import com.kodekutters.WebLvc.WeblvcMsg._
 
-    val filterList = Map[String, String]("Marking" -> "TankA")
+    val filterList = Map[String, JsValue]("Marking" -> JsString("TankA"))
     val filters = new AttributesMap(filterList)
     println("\nfilters: " + filters)
 
@@ -440,7 +440,7 @@ object WeblvcTest {
 
     val obj = Json.fromJson[WeblvcMsg](Json.parse(js)).asOpt
 
-    val filterList = Map[String, Any]("Marking" -> Array("TankA", "TankB"))
+    val filterList = Map[String, JsValue]("Marking" -> JsArray(Seq(JsString("TankA"), JsString("TankB"))))
     val filters = new AttributesMap(filterList)
 
     obj match {
