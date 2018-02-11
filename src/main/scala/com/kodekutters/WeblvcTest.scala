@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 import com.kodekutters.FilterSupport._
 import com.kodekutters.FilterSupport.FilterType._
 import com.kodekutters.WeblvcImplicits._
-import com.kodekutters.WebLvc._
+import com.kodekutters.WebLvcSupport._
 import play.api.libs.json._
 import au.id.jazzy.play.geojson._
 
@@ -21,8 +21,6 @@ import scala.collection.mutable.ArrayBuffer
   * ad-hock
   */
 object WeblvcTest {
-
-  import com.kodekutters.WebLvc.WebLvcSupport._
 
   def main(args: Array[String]): Unit = {
 
@@ -43,7 +41,7 @@ object WeblvcTest {
         testThis()
   }
 
-  import com.kodekutters.WebLvc.{AttributeUpdateMsg, CoordinatesGeod, PhysicalEntity}
+  import com.kodekutters.{AttributeUpdateMsg, CoordinatesGeod, PhysicalEntity}
 
   def testThis() = {
 
@@ -353,8 +351,6 @@ object WeblvcTest {
   def testConnect() = {
 
     val js = """{"MessageKind":"Connect","ClientName":"testconnect","WebLVCVersion":1.2,"Messages":[{"MessageKind":"SubscribeObject","ObjectType":"WebLVC:PhysicalEntity","Marking":"TankA"}]}""".stripMargin
-
-    import com.kodekutters.WebLvc.WeblvcMsg._
 
     val filterList = Map[String, JsValue]("Marking" -> JsString("TankA"))
     val filters = new AttributesMap(filterList)

@@ -1,7 +1,6 @@
 package com.kodekutters
 
 import scala.util.control.Breaks._
-import com.kodekutters.WebLvc.Filter
 import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json.Writes._

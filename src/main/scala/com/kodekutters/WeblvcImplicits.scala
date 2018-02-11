@@ -1,7 +1,5 @@
 package com.kodekutters
 
-import com.kodekutters.WebLvc._
-
 import scala.language.implicitConversions
 
 /**
