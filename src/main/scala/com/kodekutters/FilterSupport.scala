@@ -465,7 +465,7 @@ object FilterSupport {
     * @param value an Array of Filters
     */
   case class FilterOr(value: Array[Filter]) extends FilterExpType {
-    val key = FilterAnd.key
+    val key = FilterOr.key
   }
 
   object FilterOr {
@@ -494,7 +494,7 @@ object FilterSupport {
     * @param value an Array of Filters
     */
   case class FilterNot(value: Filter) extends FilterExpType {
-    val key = FilterAnd.key
+    val key = FilterNot.key
   }
 
   object FilterNot {

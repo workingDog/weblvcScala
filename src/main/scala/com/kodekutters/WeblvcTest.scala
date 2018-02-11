@@ -7,7 +7,7 @@ import com.kodekutters.FilterSupport.FilterType._
 import com.kodekutters.WeblvcImplicits._
 import com.kodekutters.WebLvc._
 import play.api.libs.json._
-import play.extras.geojson.{Feature, LatLng, Point, Polygon}
+import au.id.jazzy.play.geojson._
 
 import scala.collection.mutable
 import scala.collection.immutable.Seq
@@ -26,27 +26,61 @@ object WeblvcTest {
 
   def main(args: Array[String]): Unit = {
 
-        testConnect()
-        testConfigure()
-        testPoly()
-        testAggr()
-        testPhys()
-        testEnv()
-        testRadio()
-        WeaponFire()
-        testConnectMinMax()
-
-    testFilter()
+//        testConnect()
+//        testConfigure()
+//        testPoly()
+//        testAggr()
+//        testPhys()
+//        testEnv()
+//        testRadio()
+//        WeaponFire()
+//        testConnectMinMax()
+//
+//    testFilter()
 
     // testTime()
 
-    //    testThis()
+        testThis()
   }
 
   import com.kodekutters.WebLvc.{AttributeUpdateMsg, CoordinatesGeod, PhysicalEntity}
 
   def testThis() = {
 
+    val jsPhys =
+      """{
+          "MessageKind" : "AttributeUpdate",
+          "ObjectType" : "WebLVC:PhysicalEntity",
+          "ObjectName" : "obj-name",
+          "Timestamp" : 123456,
+          "EntityType" : [ 1, 2, 1 ],
+          "EntityIdentifier" : [ 1, 2, 225, 1, 3, 0, 0 ],
+          "Coordinates" : {
+            "WorldLocation" : [ 1, 2, 3 ],
+            "VelocityVector" : [ 4, 5, 6 ],
+            "Orientation" : [ 7, 8, 9 ]
+          },
+          "ForceIdentifier" : 7,
+          "Marking" : "F-16",
+          "EngineSmokeOn" : true,
+          "IsConcealed" : false,
+          "DamageState" : 1,
+          "Book" : { "author": "Rowling", "title": "Harry Potter", "volumes": [1,2,3], "Dimensions" : [ {"min" : [1,2,3], "max" : [10,20,30]} ]  }
+          }""".stripMargin
+
+    try {
+      val prs = Json.parse(jsPhys)
+      val phys1 = Json.fromJson[WeblvcMsg](prs).asOpt
+      println("phys1: " + phys1 + "\n")
+      phys1 match {
+        case None => println("no phys")
+        case Some(phys) => println("phys: " + Json.prettyPrint(Json.toJson[WeblvcMsg](phys)))
+      }
+      println()
+    }
+    catch {
+        case _: Throwable => println("====> got some other kind of exception")
+      }
 
   }
 

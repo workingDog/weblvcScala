@@ -1,7 +1,7 @@
 package com.kodekutters
 
 import play.api.libs.json._
-import play.extras.geojson.{ CrsFormat, NamedCrs }
+import au.id.jazzy.play.geojson._
 
 import scala.collection.immutable.Seq
 

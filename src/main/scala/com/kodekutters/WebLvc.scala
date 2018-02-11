@@ -4,7 +4,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.Reads._
 import play.api.libs.json.Writes._
 import play.api.libs.json.{JsValue, _}
-import play.extras.geojson._
+import au.id.jazzy.play.geojson._
 import play.api.libs.json._
 import scala.language.implicitConversions
 import scala.language.postfixOps
@@ -282,6 +282,7 @@ package object WebLvc {
     }
 
     val theWrites = new Writes[FilterExpression] {
+
       def writes(fx: FilterExpression) = {
         fx.value match {
           case s: FilterAnd => Json.obj("and" -> FilterAnd.fmt.writes(s))
